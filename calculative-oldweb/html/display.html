@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Retirement Simulation (Simple)</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f4f8;
+            padding: 20px;
+        }
+        .container {
+            margin-top: 20px;
+        }
+        .table-container {
+            margin-top: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 8px;
+        }
+        th {
+            background-color: #1e88e5;
+            color: white;
+            text-align: center;
+        }
+        td {
+            background-color: #ffffff;
+            text-align: right;
+        }
+        th:first-child, td:first-child {
+            text-align: left;
+        }
+        tr:nth-child(even) td {
+            background-color: #e3f2fd;
+        }
+        tr:hover {
+            background-color: #bbdefb;
+        }
+        
+
+
+        .input-field {
+            position: relative;
+            margin-top: 0;
+            width: 100%;
+        }
+
+        .material-icons.add-icon,
+        .material-icons.remove-icon {
+            cursor: pointer;
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-family: 'Material Icons';
+            font-size: 24px;
+        }
+
+        .material-icons.remove-icon {
+            right: 40px; /* Adjust as needed to separate from add icon */
+        }
+
+        .stock-field {
+            margin-bottom: 10px;  /* Ensure proper spacing between fields */
+        }
+
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2 class="center-align">Retirement Simulation (Simple)</h2>
+        <div class="row">            
+            <form id="retirementForm" class="col s12">
+                <div class="row">
+                    <div class="input-field col s3">
+                        <input id="age" type="number" class="validate" value="56" oninput="smartValidateInput(event, 20, 70)" onblur="validateNumberInput(event,20,70)"">
+                        <label for="age">Age (20-70)</label>
+                    </div>                    
+                    <div class="input-field col s3">
+                        <input id="initialCapital" type="text" class="validate" value="1000000" min="1" oninput="formatNumber(this)">
+                        <label for="initialCapital">Initial Capital ($)</label>
+                    </div>
+                    <div class="input-field col s3">
+                        <input id="yearlyWithdraw" type="text" class="validate"  value="60000" min="1" oninput="formatNumber(this)" >
+                        <label for="yearlyWithdraw">Yearly Withdraw ($)</label>
+                    </div>
+                    <div class="input-field col s3">
+                        <input id="inflation" type="text" class="validate" value="3.0"  oninput="formatPercent(event)" >
+                        <label for="inflation">Inflation (%)</label>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="input-field col s3">
+                        <select id="returnType">
+                            <option value="" disabled selected>Choose your return type</option>
+                            <option value="S">Simple Return</option>
+                            <option value="M">Market Index</option>
+                            <option value="I">Stock/ETF</option>
+                        </select>
+                        <label for="returnType">Return Type</label>
+                    </div>
+                    <div class="input-field col s3" id="fixReturnField" style="display: none;">
+                        <input id="fixReturn" type="number" step="1" class="validate" value="9">
+                        <label for="fixReturn">Expected Return (%)</label>
+                    </div>
+                    <div class="input-field col s3" id="indexField" style="display: none;">
+                        <select id="index">
+                            <option value="" disabled selected>Choose your index</option>
+                            <option value="^GSPC">S&P500</option>
+                            <option value="^DJI">Nasdaq</option>
+                            <option value="^IXIC">Dow Jones</option>
+                            <option value="^RUT">Small Cap 2000</option>
+                            <option value="^NYA">MSCI World</option>
+                        </select>
+                        <label for="index">Index</label>
+                    </div>
+
+
+
+                    
+                    <div class="col s2" id="stocks-container" style="display: none;">
+                        <div class="row" id="stocks-row">
+                            <div class="input-field col s12 stock-field" id="stock-field-1">
+                                <input id="stock1" type="text" class="validate" oninput="this.value = this.value.toUpperCase()">
+                                <label for="stock1">Sticker</label>
+                                <i class="material-icons add-icon" id="add-stock-1" onclick="addStockField(1)">add_circle</i>
+                            </div>
+                            <div class="input-field col s12 stock-field" id="stock-field-2" style="display:none;">
+                                <input id="stock2" type="text" class="validate" oninput="this.value = this.value.toUpperCase()">
+                                <label for="stock2">Sticker</label>
+                                <i class="material-icons add-icon" id="add-stock-2" onclick="addStockField(2)">add_circle</i>
+                                <i class="material-icons remove-icon" id="remove-stock-2" onclick="removeStockField(2)">remove_circle</i>
+                            </div>
+                            <div class="input-field col s12 stock-field" id="stock-field-3" style="display:none;">
+                                <input id="stock3" type="text" class="validate" oninput="this.value = this.value.toUpperCase()">
+                                <label for="stock3">Sticker</label>
+                                <i class="material-icons remove-icon" id="remove-stock-3" onclick="removeStockField(3)">remove_circle</i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="input-field col s3" id="allocationField" style="display: none;">
+                        <select id="allocation">
+                            <option value="" disabled selected>Choose allocation</option>
+                            <option value="even">Even</option>
+                        </select>
+                        <label for="allocation">Allocation</label>
+                    </div>
+
+
+                    <div class="input-field col s2" id="backTestYearField" style="display: none;">
+                        <input id="backTestYear" type="number" class="validate" value="1999">
+                        <label for="backTestYear">Back Test Year</label>
+                    </div>
+                    <div class="input-field col s2" id="divWithholdTaxField" style="display: none;">
+                        <input id="divWithholdTax" type="number" step="1" class="validate" value="30">
+                        <label for="divWithholdTax">Dividend Tax (%)</label>
+                    </div>
+                    
+                    
+                </div>
+                
+                <div class="row">
+                    <button class="btn waves-effect waves-light" type="button" id="submitBtn">
+                        <i class="material-icons left">add</i>  <!-- Icon on the left -->
+                        Generate
+                    </button>
+                </div>
+                
+            </form>
+        </div>
+        <div class="table-container">
+            <table class="highlight">
+                <thead>
+                    <tr>
+                        <th>Age</th>
+                        <th>Year</th>
+                        <th>Beginning Capital ($)</th>
+                        <th>Withdrawal ($)</th>
+                        <th>Capital After Withdrawal ($)</th>
+                        <th>Capital Gain ($)</th>
+                        <th>After Tax Dividend ($)</th>
+                        <th>End of Year Capital ($)</th>
+                        <th>After Tax Yearly Return (%)</th>
+                    </tr>
+                </thead>
+                <tbody id="resultsTable">
+                    <!-- Data will be inserted here -->
+                </tbody>
+            </table>
+        </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var elems = document.querySelectorAll('select');
+            var instances = M.FormSelect.init(elems);
+        });
+        
+        document.getElementById('returnType').addEventListener('change', function() {
+                var returnType = document.getElementById('returnType').value;
+                if (returnType === 'S') {
+                    document.getElementById('indexField').style.display = 'none';
+                    resetStockFields('off');
+                    document.getElementById('backTestYearField').style.display = 'none';
+                    document.getElementById('divWithholdTaxField').style.display = 'none';
+                    document.getElementById('fixReturnField').style.display = 'block';
+                } else if (returnType === 'M') {
+                    document.getElementById('indexField').style.display = 'block';
+                    resetStockFields('off');
+                    document.getElementById('backTestYearField').style.display = 'block';
+                    document.getElementById('divWithholdTaxField').style.display = 'none';
+                    document.getElementById('fixReturnField').style.display = 'none';
+                }else if (returnType === 'I') {
+                    document.getElementById('indexField').style.display = 'none';
+                    resetStockFields('on');
+                    document.getElementById('backTestYearField').style.display = 'block';
+                    document.getElementById('divWithholdTaxField').style.display = 'block';
+                    document.getElementById('fixReturnField').style.display = 'none';
+                } else {
+                    document.getElementById('indexField').style.display = 'none';
+                    resetStockFields('off');
+                    document.getElementById('backTestYearField').style.display = 'none';
+                    document.getElementById('divWithholdTaxField').style.display = 'none';
+                    document.getElementById('fixReturnField').style.display = 'none';
+                }
+        });
+
+        function resetStockFields(state) {
+            const stocksContainer = document.getElementById('stocks-container');
+            const allocationField = document.getElementById('allocationField');
+            const stockFields = document.querySelectorAll('.stock-field');
+
+            if (state === 'on') {
+                stocksContainer.style.display = 'block';
+                stockFields.forEach((field, index) => {
+                    if (index === 0) {
+                        field.style.display = 'block';
+                    } else {
+                        field.style.display = 'none';
+                    }
+                });
+                allocationField.style.display = 'none';
+            } else if (state === 'off') {
+                // Triggering the click on the - button for all fields beyond the first one
+                for (let i = stockFields.length - 1; i > 0; i--) {
+                    const removeIcon = stockFields[i].querySelector('.remove-icon');
+                    if (removeIcon && stockFields[i].style.display !== 'none') {
+                        removeIcon.click();
+                    }
+                }
+
+                // Clear the first stock field value
+                stockFields[0].querySelector('input').value = '';
+                
+                stocksContainer.style.display = 'none';
+                allocationField.style.display = 'none';
+                allocationField.querySelector('select').value = '';
+            }
+        }
+
+
+    
+        
+        document.getElementById('submitBtn').addEventListener('click', function() {
+
+            prepareNumericInputs(['initialCapital', 'yearlyWithdraw']);
+           
+            const data = {
+                age: document.getElementById('age').value,
+                initialCapital: document.getElementById('initialCapital').value,
+                yearlyWithdraw: document.getElementById('yearlyWithdraw').value,
+                inflation: document.getElementById('inflation').value,
+                returnType: document.getElementById('returnType').value,
+                fixReturn: document.getElementById('fixReturn').value,
+                index: document.getElementById('index').value,
+                //sticker: document.getElementById('sticker').value,
+                backTestYear: document.getElementById('backTestYear').value,
+                divWithholdTax: document.getElementById('divWithholdTax').value,
+                portfolio: getPortfolioData()  // Collect the portfolio data
+            };
+                
+
+            fetch('http://localhost:5000/getCal', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                const tableBody = document.getElementById('resultsTable');
+                tableBody.innerHTML = ''; // Clear previous results
+
+                data.forEach(row => {
+                    let newRow = document.createElement('tr');
+
+                    // Ensure the correct order of keys
+                    const keys = ["Age", "Year", "Beginning Capital ($)", "Withdrawal ($)", "Capital After Withdrawal ($)","Capital Gain ($)","Net Dividend ($)", "End of Year Capital ($)", "Effective Return (%)"];
+                    keys.forEach(key => {
+                        let newCell = document.createElement('td');
+                        newCell.textContent = row[key];
+                        if (key === "Age" || key === "Year") {
+                            newCell.style.textAlign = 'left'; // Align Age and Year to the left
+                        } else {
+                            newCell.style.textAlign = 'right'; // Align numbers to the right
+                        }
+                        newRow.appendChild(newCell);
+                    });
+
+                    tableBody.appendChild(newRow);
+                });
+            })
+            .catch(error => console.error('Error:', error));
+        });
+
+        function getPortfolioData() {
+            const portfolio = {};
+            const stocks = [];
+
+            for (let i = 1; i <= 3; i++) {
+                const stock = document.getElementById(`stock${i}`).value;
+                if (stock) {
+                    stocks.push(stock);
+                }
+            }
+
+            const allocation = document.getElementById('allocation').value;
+            if (allocation && allocation !== 'even') {
+                const allocations = allocation.split('-').map(Number);
+                stocks.forEach((stock, index) => {
+                    if (allocations[index] !== undefined) {
+                        portfolio[stock] = allocations[index] / 100;
+                    }
+                });
+            } else if (allocation === 'even') {
+                const equalAllocation = 1 / stocks.length;
+                stocks.forEach(stock => {
+                    portfolio[stock] = equalAllocation;
+                });
+            } else if (stocks.length === 1) {
+                portfolio[stocks[0]] = 1.0;  // Single stock with full allocation
+            }
+
+            return portfolio;
+        }
+
+
+    </script>
+    <script>
+      
+      function formatNumber(input) {
+            // Remove commas and non-numeric characters
+            let value = input.value.replace(/,/g, '').replace(/\D/g, '');
+            
+            // Format number with commas
+            input.value = value.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+            
+            // Update hidden input value
+            ///let hiddenInput = document.getElementById(input.id.replace('Display', ''));
+            //hiddenInput.value = value;
+        }
+
+        function prepareNumericInputs(inputs) {
+            inputs.forEach(inputId => {
+                let inputElement = document.getElementById(inputId);
+                let numericValue = removeCommas(inputElement.value);
+                inputElement.value = numericValue;
+            });
+        }
+
+        function removeCommas(value) {
+            return value.replace(/,/g, '');
+        }
+    </script>
+    <script>
+        function formatPercent(event) {
+            var input = event.target;
+            var value = input.value;
+
+            // Save cursor position
+            var cursorPosition = input.selectionStart;
+
+            // Remove any non-numeric characters except for one dot
+            var cleanValue = value.replace(/[^0-9.]/g, '');
+
+            // Allow only one dot
+            var dotIndex = cleanValue.indexOf('.');
+            if (dotIndex !== -1) {
+                cleanValue = cleanValue.substring(0, dotIndex + 1) + cleanValue.substring(dotIndex + 1).replace(/\./g, '');
+            }
+
+            // Allow only one decimal place
+            var decimalIndex = cleanValue.indexOf('.');
+            if (decimalIndex !== -1 && cleanValue.length > decimalIndex + 2) {
+                cleanValue = cleanValue.substring(0, decimalIndex + 2);
+            }
+
+            // Restrict the maximum value to 99.9
+            if (parseFloat(cleanValue) > 99.9) {
+                cleanValue = cleanValue.substring(0, cleanValue.length - 1);
+            }
+
+            // Prevent invalid characters from appearing in the input
+            input.value = cleanValue;
+
+            // Restore cursor position
+            if (cursorPosition > cleanValue.length) {
+                cursorPosition = cleanValue.length;
+            }
+            input.setSelectionRange(cursorPosition, cursorPosition);
+        }
+
+        function smartValidateInput(event, min, max) {
+            var input = event.target;
+            var value = input.value;
+
+            // Allow input if it's a valid number and not exceeding the digit length of max value
+            if (value && value.length <= max.toString().length) {
+                var num = parseFloat(value);
+
+                if (!isNaN(num) && num >= min && num <= max) {
+                input.dataset.valid = "true";
+                } else {
+                input.dataset.valid = "false";
+                }
+            } else if (value === '') {
+                input.dataset.valid = "true"; // Allow empty input until onblur check
+            } else {
+                input.value = value.slice(0, -1); // Remove last digit if it exceeds the max length
+                input.dataset.valid = "false";
+            }
+            }
+
+
+        function validateNumberInput(event, min, max) {
+            var input = event.target;
+            var value = input.value;
+            // Parse the value to a float
+            var num = parseFloat(value);
+
+            // If value is invalid or outside the range, clear the input
+            if (!isNaN(num) && num >= min && num <= max) {
+                input.value = num;
+            } else {
+                input.value = '';
+            }
+        }
+    </script>
+    <script> 
+        //Handle Stock Fields adding and removing, as well as Allocation Options
+        document.addEventListener('DOMContentLoaded', function() {
+            var elems = document.querySelectorAll('select');
+            M.FormSelect.init(elems);
+        });
+
+        let stockCount = 1;
+
+        function updateAllocationOptions() {
+            const allocationField = document.getElementById('allocation');
+            allocationField.innerHTML = ''; // Clear previous options
+
+            let options = ['<option value="" disabled selected>Choose allocation</option>', '<option value="even">Even</option>'];
+
+            if (stockCount === 2) {
+                options.push('<option value="60-40">60/40</option>', '<option value="70-30">70/30</option>');
+            } else if (stockCount === 3) {
+                options.push('<option value="50-30-20">50/30/20</option>', '<option value="60-20-20">60/20/20</option>', '<option value="60-30-10">60/30/10</option>');
+            }
+
+            options.forEach(option => allocationField.insertAdjacentHTML('beforeend', option));
+            M.FormSelect.init(document.querySelectorAll('select'));
+        }
+
+        function addStockField(id) {
+            if (stockCount < 3) {
+                stockCount++;
+                const nextFieldId = id + 1;
+                const nextField = document.getElementById(`stock-field-${nextFieldId}`);
+
+                if (nextField) {
+                    // Clear the next field data before showing it
+                    document.getElementById(`stock${nextFieldId}`).value = '';
+                    nextField.style.display = 'block';
+
+                    // Hide the add icon from the current field
+                    const currentAddIcon = document.getElementById(`add-stock-${id}`);
+                    if (currentAddIcon) {
+                        currentAddIcon.style.display = 'none';
+                    }
+
+                    if (stockCount === 3) {
+                        const nextAddIcon = document.getElementById(`add-stock-${nextFieldId}`);
+                        if (nextAddIcon) {
+                            nextAddIcon.style.display = 'none';
+                        }
+                    } else {
+                        const nextAddIcon = document.getElementById(`add-stock-${nextFieldId}`);
+                        if (nextAddIcon) {
+                            nextAddIcon.style.display = 'block';
+                        }
+                    }
+
+                    if (stockCount > 1) {
+                        document.getElementById('allocationField').style.display = 'block';
+                    }
+                }
+
+                updateAllocationOptions(); // Ensure allocation options are updated correctly
+                M.updateTextFields();
+                M.FormSelect.init(document.querySelectorAll('select'));
+            }
+        }
+
+        function removeStockField(id) {
+            const currentField = document.getElementById(`stock-field-${id}`);
+            const nextField = document.getElementById(`stock-field-${id + 1}`);
+
+            if (nextField && nextField.style.display !== 'none') {
+                // Shift data from next field to current field
+                document.getElementById(`stock${id}`).value = document.getElementById(`stock${id + 1}`).value;
+                document.getElementById(`stock${id + 1}`).value = '';
+                nextField.style.display = 'none';
+            } else {
+                document.getElementById(`stock${id}`).value = '';
+                currentField.style.display = 'none';
+            }
+
+            stockCount--;
+
+            const stockFields = document.querySelectorAll('.stock-field');
+            let lastVisibleField;
+            stockFields.forEach((field, index) => {
+                if (field.style.display !== 'none') {
+                    lastVisibleField = index + 1;
+                }
+            });
+
+            if (lastVisibleField) {
+                stockFields.forEach((field, index) => {
+                    const addIcon = document.getElementById(`add-stock-${index + 1}`);
+                    if (addIcon) {
+                        addIcon.style.display = (index + 1 === lastVisibleField && stockCount < 3) ? 'block' : 'none';
+                    }
+                });
+            }
+
+            if (stockCount === 1) {
+                document.getElementById('allocationField').style.display = 'none';
+            }
+
+            updateAllocationOptions(); // Ensure allocation options are updated correctly
+            M.updateTextFields();
+            M.FormSelect.init(document.querySelectorAll('select'));
+        }
+
+
+    </script>
+
+</body>
+</html>

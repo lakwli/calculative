@@ -1,0 +1,134 @@
+{
+  "labels": {
+    "backTestYear": "Backtest Year",
+    "divTax": "Dividend Tax",
+    "planStartAge": "Plan (Start) Age",
+    "withdrwalStartAge": "Withdrawal (Start) Age",
+    "incomeBeginAge": "Income Start Age",
+    "incomeEndYear": "Income End Age",
+    "incomeAmount": "Initial Amount",
+    "incomeAmountType": "Initial Amount Basis",
+    "incomeType": "Income Type",
+    "incomeGrowthRate": "Yearly Income Growth Rate",
+    "incomeGrowthRate4StartLaterOneTime": "Growth Rate",
+    "incomeContributeTo": "Contribute To ",
+    "age": "Age",
+    "withdrawAge": "Age",
+    "pensionWithdrawAge": "Withdrawable",
+    "allocationInitial": "Initial Allocation",
+    "allocation2nd": "Second Allocation",
+    "allocation3rd": "Third Allocation",
+    "allocationInitialH": "Begin Alloc",
+    "allocation2ndH": "Alloc At",
+    "allocation3rdH": "Alloc At",
+    "allocationFundReturn": "Return",
+    "allocationRebalance":"Rebalance?",
+    "withdrawAnnualizedReturn": "Annualized Return",
+    "withdrawFrom": "Withdraw With"
+  },
+  "explain": {
+    "incomeAmountType": "Specify if the initial amount is exact or to be adjusted",
+    "incomeGrowthRateForYearsIncome": "   Income will grow annually based on this rate",
+    "addExtraIncome": "Enter any additional money you expect to receive after the initial capital, either as ongoing income or one-time future income.",
+    "incomeContributeTo": "Specify if this income should be contributed to a particular asset (e.g., pension fund) ONLY",
+    "deleteWarning":"This action is final",
+    "rebalanceOption":"Rebalance the portfolio to the specified allocation at the specified age"
+  },
+  "messages": {
+    "unsavedChanges": " You have unsaved changes. Are you sure you want to discard them?",
+    "confirmDeleteIncome": " Are you sure you want to delete this income?"
+  },
+  "titles": {
+    "discardChanges": "Discard Changes",
+    "confirmDelete": "Delete Confirmation",
+    "addIncome": "Add Extra Income",
+    "changeIncome": "Change Income Details",
+    "haveStock": "Have Stock?",
+    "incomeSummary": "Income Summary"
+  },
+  "buttons": {
+    "keepEditing": "Cancel & Back",
+    "discardChanges": "Discard & Close",
+    "saveChanges": "Save",
+    "add":"Add",
+    "addAndNext":"Add & Next",
+    "cancel": "Cancel",
+    "delete": "Delete & Close",
+    "confirmDelete": "Proceed Delete & Close",
+    "cancelDelete": "Cancel & Back",
+    "addFund": "+ Add Fund",
+    "addIncome": "+ Add Income"
+  },
+  "options": {
+    "followPlanStartAge": "Now",
+    "laterAge": "Later",
+    "noWithdrawals": "No Consistent Withdrawals Plan",
+    "notSpecified": "Not Specified",
+    "notSpecificContribution": "Not Required"
+  },
+  "optionMessage": {
+    "laterAge": "Plan to start withdrawal years later",
+    "followPlanStartAge": "Withdraw immediately",
+    "noWithdrawals": "Use dynamic expenses as needed."
+  },
+
+  "fundTypeOptions": {
+    "cash": "Cash",
+    "pension": "Pension",
+    "market": "Market",
+    "ticker": "Stock/ETF"
+  },
+
+  "incomeEndAgeOptions": {
+    "onetime": "One-Time Income",
+    "forever": "Ongoing Income",
+    "retirement": "Ending Before Withdrawal Age",
+    "until": "Until Age"
+  },
+
+  "incomeAmountTypes": {
+    "future": "Exact Amount (No Adjustments)",
+    "today_adjust_inflation": "Today's Value (Adjust for Inflation)",
+    "today_adjust_growth": "Today's Value (Adjust for Growth Rate)",
+    "future_description": "This is the exact initial amount you will receive when the income starts, with no adjustments needed",
+    "today_adjust_inflation_description": "This is the amount as of today, and it will be adjusted based on inflation rates when the income starts",
+    "today_adjust_growth_description": "This is the amount as of today, and it will adjusted based on growth rates when the income starts"
+  },
+
+  "incomeType": {
+    "annually": "Annually",
+    "onetime": "One-Time Only"
+  },
+
+  "incomeStartOptions": {
+    "starting_today": "Now",
+    "starting_later": "Later"
+  },
+
+  "pensionWithdrawOption": {
+    "now": "Now",
+    "upon": "Later"
+  },
+  "pensionWithdrawOptionDescription": {
+    "now": "Withdrawable immediately",
+    "upon": "For retired earlier or future retirement."
+  },
+
+  "fundWithdrawOption": {
+    "allocation": "By Allocation",
+    "bestPerformance": "Best Performer",
+    "returnExceed": "Exceed Target"
+  },
+  "fundWithdrawOptionDescription": {
+    "A": "Withdraw funds according to 'allocation at' respective ages.",
+    "B": "Withdraw from the best performing fund first.",
+    "R": "Withdraw from the best performing fund first if return exceeds specified 'Annualized Return'. Otherwise withdraw from the best performing cash/pension fund."
+  },
+  "indexOptions": {
+    "sp500": "S&P500",
+    "nasdaq": "Nasdaq",
+    "dowJones": "Dow Jones",
+    "smallCap2000": "Small Cap 2000",
+    "msciWorld": "MSCI World"
+  }
+}

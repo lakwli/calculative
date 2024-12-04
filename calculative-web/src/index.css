@@ -1,0 +1,56 @@
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: #f4f4f4;
+}
+
+.App {
+  /* text-align: center; */
+  padding: 20px;
+}
+
+
+
+button {
+  margin-top: 20px;
+}
+
+.DataGrid {
+  margin-top: 20px;
+}
+
+/* Add this to your CSS file or import it in your component */
+.react-resizable {
+  position: relative;
+}
+
+/* Add this to your CSS file */
+.custom-handle {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  bottom: 0;
+  right: 0;
+  background: #007bff;
+  cursor: se-resize;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  box-shadow: 0 0 5px rgba(21, 9, 9, 0.764);
+}
+
+
+/* Add this to your CSS file */
+.z-index-mainscreen {
+  z-index: 500;
+}
+
+.z-index-subscreen {
+  z-index: 800; /* use in SimpleResizableComponent, for income/expenses summary */
+}
+
+
+.z-index-subEntry {
+  z-index: 10000; /* use income/expenses DataInput */
+}
+
