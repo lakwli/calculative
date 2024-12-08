@@ -68,6 +68,7 @@ const IncomeDataInput = ({ open, handleClose, incomeId }) => {
 
   const [unsavedChanges, setUnsavedChanges] = useState(false); // Track unsaved changes
   const { t } = useTranslation();
+  
 
   useEffect(() => {
     if (open) {
@@ -221,14 +222,21 @@ const IncomeDataInput = ({ open, handleClose, incomeId }) => {
   /** incomeData.startAgeOption === INCOME_START_OPTIONS.STARTING_TODAY || (incomeData.startAgeOption === INCOME_START_OPTIONS.STARTING_LATER && 
     incomeData.endAgeOption !== INCOME_END_AGE_OPTIONS.ONETIME);*/
 
-    const [inputValue, setInputValue] = useState(incomeData.name);
 
-    const handleAutocompleteChange = (event, newValue) => {
+
+
+
+
+
+
+    const handleAutocompleteChangeName = (event, newValue) => {
+      setIncomeData({ ...incomeData, name: newValue });
       handleInputChange({ target: { name: 'name', value: newValue } });
     };
   
-    const handleInputChangeAutocomplete = (event) => {
-      setInputValue(event.target.value);
+    const handleInputChangeAutocompleteName = (event) => {
+      const { value } = event.target;
+    setIncomeData({ ...incomeData, name: value });
       handleInputChange(event);
     };
 
@@ -276,9 +284,10 @@ const IncomeDataInput = ({ open, handleClose, incomeId }) => {
       <Autocomplete
         freeSolo
         options={incomeTerms}
-        inputValue={inputValue}
-        onInputChange={(event, newInputValue) => setInputValue(newInputValue)}
-        onChange={handleAutocompleteChange}
+
+        inputValue={incomeData.name}
+        onInputChange={(event, newInputValue) => setIncomeData({ ...incomeData, name: newInputValue })}
+        onChange={handleAutocompleteChangeName}
         renderInput={(params) => (
           <TextField
             {...params}
