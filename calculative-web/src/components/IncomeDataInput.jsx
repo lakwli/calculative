@@ -230,15 +230,9 @@ const IncomeDataInput = ({ open, handleClose, incomeId }) => {
 
 
     const handleAutocompleteChangeName = (event, newValue) => {
-      setIncomeData({ ...incomeData, name: newValue });
       handleInputChange({ target: { name: 'name', value: newValue } });
     };
   
-    const handleInputChangeAutocompleteName = (event) => {
-      const { value } = event.target;
-    setIncomeData({ ...incomeData, name: value });
-      handleInputChange(event);
-    };
 
     
   return (
@@ -286,7 +280,9 @@ const IncomeDataInput = ({ open, handleClose, incomeId }) => {
         options={incomeTerms}
 
         inputValue={incomeData.name}
-        onInputChange={(event, newInputValue) => setIncomeData({ ...incomeData, name: newInputValue })}
+        onInputChange={(event, newInputValue) => {
+          handleInputChange({ target: { name: 'name', value: newInputValue } });
+        }}
         onChange={handleAutocompleteChangeName}
         renderInput={(params) => (
           <TextField
