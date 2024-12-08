@@ -20,6 +20,7 @@ import {
   Select,
   InputLabel,
   Paper,
+  Autocomplete,
 } from "@mui/material";
 import { Close as CloseIcon, Delete as DeleteIcon } from "@mui/icons-material";
 import Grid from "@mui/material/Grid2";
@@ -56,6 +57,8 @@ import DoneOutlineIcon from "@mui/icons-material/DoneOutline";
 import DoneAllIcon from "@mui/icons-material/DoneAll";
 import AddIcon from "@mui/icons-material/Add";
 import PlusOneIcon from "@mui/icons-material/PlusOne";
+import incomeTerms from '../data/incomeTerms.jsx';
+
 
 const IncomeDataInput = ({ open, handleClose, incomeId }) => {
   const { simul, setSimul } = useSimul();
@@ -218,6 +221,18 @@ const IncomeDataInput = ({ open, handleClose, incomeId }) => {
   /** incomeData.startAgeOption === INCOME_START_OPTIONS.STARTING_TODAY || (incomeData.startAgeOption === INCOME_START_OPTIONS.STARTING_LATER && 
     incomeData.endAgeOption !== INCOME_END_AGE_OPTIONS.ONETIME);*/
 
+    const [inputValue, setInputValue] = useState(incomeData.name);
+
+    const handleAutocompleteChange = (event, newValue) => {
+      handleInputChange({ target: { name: 'name', value: newValue } });
+    };
+  
+    const handleInputChangeAutocomplete = (event) => {
+      setInputValue(event.target.value);
+      handleInputChange(event);
+    };
+
+    
   return (
     <>
       <Modal open={open} onClose={handleDialogClose}>
@@ -251,14 +266,30 @@ const IncomeDataInput = ({ open, handleClose, incomeId }) => {
             <CloseIcon />
           </IconButton>
           <h2>{incomeId ? t("titles.changeIncome") : t("titles.addIncome")}</h2>
+          
+
+
+
+   
+
+
+      <Autocomplete
+        freeSolo
+        options={incomeTerms}
+        inputValue={inputValue}
+        onInputChange={(event, newInputValue) => setInputValue(newInputValue)}
+        onChange={handleAutocompleteChange}
+        renderInput={(params) => (
           <TextField
+            {...params}
             fullWidth
             label="Name"
             name="name"
-            value={incomeData.name}
-            onChange={handleInputChange}
             margin="normal"
           />
+        )}
+      />
+
 
           <TextField
             fullWidth
