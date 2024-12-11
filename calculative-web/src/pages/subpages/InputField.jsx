@@ -21,7 +21,7 @@ import ReturnTypeCard from "../../components/ReturnTypeCard";
 import IncomeDataInput from "../../components/IncomeDataInput";
 import IncomeSummary from "../../components/IncomeSummary";
 import Badge from "@mui/material/Badge";
-import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
+import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import { useSimul } from "../../contexts/SimulContext";
 import {
   getWithdrawStartAgeOptions,
@@ -33,7 +33,7 @@ import buttonStyles from "../../styles/buttonStyles";
 import { useTranslation } from "react-i18next";
 import SimpleResizableComponent from "../../components/library/SimpleResizableComponent";
 import CustomTextField from "../../styles/textfieldStyles";
-import {CustomsButton} from "../../styles/buttonStyles";
+import { CustomsButton } from "../../styles/buttonStyles";
 
 function InputField() {
   const { t } = useTranslation();
@@ -46,7 +46,7 @@ function InputField() {
   const handleIncomeBadgeClick = () => {
     //setAnchorElInc(anchorElInc ? null : event.currentTarget);
     const popperElement = document.getElementById("income-summary-popper");
-   // console.log("popperElement", popperElement);
+    // console.log("popperElement", popperElement);
     setShowIncomeSummary(!showIncomeSummary); // Ensure the summary screen is shown
 
     // Control visibility using the ID
@@ -94,7 +94,7 @@ function InputField() {
       <Grid container spacing={2} sx={{ mt: 2, mb: 3 }}>
         <Grid size={{ xs: 12, sm: 12, md: 2 }}>
           <CustomTextField
-          clearable
+            clearable
             id="age"
             label={t("labels.planStartAge")}
             type="number"
@@ -111,7 +111,7 @@ function InputField() {
         </Grid>
         <Grid size={{ xs: 12, sm: 12, md: 3.3 }}>
           <CustomTextField
-          clearable
+            clearable
             id="initialCapital"
             label="Initial Capital"
             fullWidth
@@ -205,7 +205,7 @@ function InputField() {
           WITHDRAW_START_AGE_OPTIONS.NO_WITHDRAWALS && (
           <Grid size={{ xs: 12, sm: 12, md: 1.7 }}>
             <CustomTextField
-            clearable
+              clearable
               id="yearlyWithdraw"
               label="Yearly Withdraw"
               fullWidth
@@ -273,10 +273,14 @@ function InputField() {
               {t("buttons.addIncome")}
             </CustomsButton>
             {simul.incomes.length > 0 && (
-              <IconButton  name='incomeBadgeIcon' onClick={handleIncomeBadgeClick} ref={incomeBadgeRef}>
+              <IconButton
+                name="incomeBadgeIcon"
+                onClick={handleIncomeBadgeClick}
+                ref={incomeBadgeRef}
+              >
                 <Badge
                   badgeContent={simul.incomes.length}
-                  name='incomeBadge'
+                  name="incomeBadge"
                   color="primary"
                   sx={{
                     ml: 1,
@@ -289,17 +293,17 @@ function InputField() {
                 </Badge>
               </IconButton>
             )}
-   {simul.incomes.length > 0 && (
-            <SimpleResizableComponent
-              handleClose={handleIncomeSummaryClose}
-              title={t("titles.incomeSummary")}
-              //anchorEl={anchorElInc}
-              anchorEl={incomeBadgeRef.current}
-              id="income-summary-popper"
-            >
-              <IncomeSummary onIncomeClick={handleOpenIncomeForUpdateModal} />
-            </SimpleResizableComponent>
-   )}
+            {simul.incomes.length > 0 && (
+              <SimpleResizableComponent
+                handleClose={handleIncomeSummaryClose}
+                title={t("titles.incomeSummary")}
+                //anchorEl={anchorElInc}
+                anchorEl={incomeBadgeRef.current}
+                id="income-summary-popper"
+              >
+                <IncomeSummary onIncomeClick={handleOpenIncomeForUpdateModal} />
+              </SimpleResizableComponent>
+            )}
           </Box>
         </Grid>
       </Grid>

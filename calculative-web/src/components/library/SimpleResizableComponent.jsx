@@ -11,6 +11,23 @@ const SimpleResizableComponent = ({ handleClose, title, children, anchorEl, id }
   const [isResizing, setIsResizing] = useState(false);
   const isDesktop = DeviceUtils.isDesktopOS();
 
+  //to fix the issue of resize causing popper repositioning
+  const [width, setWidth] = useState(340);
+  const [height, setHeight] = useState(180);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+
+
+  const handleResize = (event, { size }) => {
+    setWidth(size.width);
+    setHeight(size.height);
+  };
+
+  const handleDrag = (e, data) => {
+    setPosition({ x: data.x, y: data.y });
+    setIsDragging(false);
+  };
+
+
 
   return (
     <Popper
@@ -31,16 +48,20 @@ const SimpleResizableComponent = ({ handleClose, title, children, anchorEl, id }
       <Draggable
         nodeRef={nodeRef}
         handle=".drag-handle"
+        position={position}
         onStart={() => setIsDragging(true)}
-        onStop={() => setIsDragging(false)}
+        onStop={(e, data) => handleDrag(e, data)}      
       >
         <div ref={nodeRef} style={{ width: 'fit-content', height: 'fit-content' }}>
           {isDesktop ? (
             <ResizableBox
-              width={340}
-              height={180}
+            width={width}
+            height={height}
               minConstraints={[200, 200]}
               maxConstraints={[600, 600]}
+              onResize={handleResize}
+              //resizeHandles={['se']}
+              //handle={<span className="custom-handle custom-handle-se" />}
               onResizeStart={() => setIsResizing(true)}
               onResizeStop={() => setIsResizing(false)}
               style={{ border: '1px solid #ddd', backgroundColor: '#f7f7f7', color: '#333' }}

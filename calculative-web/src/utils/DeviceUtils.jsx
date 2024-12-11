@@ -4,7 +4,7 @@ import useMediaQuery from '@mui/material/useMediaQuery';
 class DeviceUtils {
   static isDesktopOS() {
     const userAgent = navigator.userAgent;
-    return /Windows|Macintosh/.test(userAgent);
+    return /Windows|Macintosh|Linux|Samsung DeX/.test(userAgent);
   }
 
   static isMobile() {

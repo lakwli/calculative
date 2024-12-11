@@ -57,18 +57,17 @@ import DoneOutlineIcon from "@mui/icons-material/DoneOutline";
 import DoneAllIcon from "@mui/icons-material/DoneAll";
 import AddIcon from "@mui/icons-material/Add";
 import PlusOneIcon from "@mui/icons-material/PlusOne";
-import incomeTerms from '../data/incomeTerms.jsx';
-
+import incomeTerms from "../data/incomeTerms.jsx";
 
 const IncomeDataInput = ({ open, handleClose, incomeId }) => {
   const { simul, setSimul } = useSimul();
   const [incomeData, setIncomeData] = useState(new Income());
   const [confirmDialog4CloseOpen, setConfirmDialog4CloseOpen] = useState(false); // Track confirmation dialog state
-  const [confirmDialog4DeleteOpen, setConfirmDialog4DeleteOpen] = useState(false);
+  const [confirmDialog4DeleteOpen, setConfirmDialog4DeleteOpen] =
+    useState(false);
 
   const [unsavedChanges, setUnsavedChanges] = useState(false); // Track unsaved changes
   const { t } = useTranslation();
-  
 
   useEffect(() => {
     if (open) {
@@ -219,22 +218,11 @@ const IncomeDataInput = ({ open, handleClose, incomeId }) => {
   const handleCancelClose = () => {
     setConfirmDialog4CloseOpen(false);
   };
-  /** incomeData.startAgeOption === INCOME_START_OPTIONS.STARTING_TODAY || (incomeData.startAgeOption === INCOME_START_OPTIONS.STARTING_LATER && 
-    incomeData.endAgeOption !== INCOME_END_AGE_OPTIONS.ONETIME);*/
 
+  const handleAutocompleteChangeName = (event, newValue) => {
+    handleInputChange({ target: { name: "name", value: newValue } });
+  };
 
-
-
-
-
-
-
-    const handleAutocompleteChangeName = (event, newValue) => {
-      handleInputChange({ target: { name: 'name', value: newValue } });
-    };
-  
-
-    
   return (
     <>
       <Modal open={open} onClose={handleDialogClose}>
@@ -250,8 +238,8 @@ const IncomeDataInput = ({ open, handleClose, incomeId }) => {
             boxShadow: 24,
             p: 4,
             borderRadius: 2,
-            maxHeight: '95vh', // Ensure the modal does not exceed the viewport height
-            overflowY: 'auto', // Enable vertical scrolling
+            maxHeight: "95vh", // Ensure the modal does not exceed the viewport height
+            overflowY: "auto", // Enable vertical scrolling
           }}
           className="z-index-subEntry"
         >
@@ -268,33 +256,27 @@ const IncomeDataInput = ({ open, handleClose, incomeId }) => {
             <CloseIcon />
           </IconButton>
           <h2>{incomeId ? t("titles.changeIncome") : t("titles.addIncome")}</h2>
-          
 
-
-
-   
-
-
-      <Autocomplete
-        freeSolo
-        options={incomeTerms}
-
-        inputValue={incomeData.name}
-        onInputChange={(event, newInputValue) => {
-          handleInputChange({ target: { name: 'name', value: newInputValue } });
-        }}
-        onChange={handleAutocompleteChangeName}
-        renderInput={(params) => (
-          <TextField
-            {...params}
-            fullWidth
-            label="Name"
-            name="name"
-            margin="normal"
+          <Autocomplete
+            freeSolo
+            options={incomeTerms}
+            inputValue={incomeData.name}
+            onInputChange={(event, newInputValue) => {
+              handleInputChange({
+                target: { name: "name", value: newInputValue },
+              });
+            }}
+            onChange={handleAutocompleteChangeName}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                fullWidth
+                label="Name"
+                name="name"
+                margin="normal"
+              />
+            )}
           />
-        )}
-      />
-
 
           <TextField
             fullWidth
