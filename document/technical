@@ -2,9 +2,38 @@ python -m venv env
 source env/bin/activate
 pip install -r requirements.txt
 python app/app.py
+docker-compose down
 
 
+Rebuild workspace with Docker:
+docker-compose up --build
 
+Build the backend:
+cd /workspaces/calculative/calculative-backend
+docker build -t calculative-backend .
+
+docker run calculative-backend app/fin/test2.py
+
+docker ps
+docker stop 83f4f535ac19
+docker rm 83f4f535ac19
+docker run -p 5000:5000 calculative-backend
+
+
+Test the frontend without Docker:
 cd /path/to/your/vite-react-project
 npm install
 npm run dev
+
+
+Test the front end with Docker:
+docker ps
+docker stop 83f4f535ac19
+docker rm 83f4f535ac19
+
+docker build -t calculative-web .
+docker run -p 3001:3000 calculative-web
+
+
+
+

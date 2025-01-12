@@ -1,3 +1,7 @@
 Flask
 flask_cors
 yfinance
+scikit-learn
+pandas
+numpy
+matplotlib

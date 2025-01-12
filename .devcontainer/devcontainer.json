@@ -1,0 +1,13 @@
+{
+  "name": "calculative",
+  "dockerComposeFile": "../docker-compose.yml",
+  "service": "backend",
+  "workspaceFolder": "/workspaces/calculative",
+  "extensions": [
+    "ms-python.python",
+    "dbaeumer.vscode-eslint"
+  ],
+  "settings": {
+    "python.pythonPath": "/usr/local/bin/python"
+  }
+}

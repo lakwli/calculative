@@ -6,6 +6,15 @@ from fin.run_yahoo import StockCal
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
 
+@app.route('/')
+def home():
+    return 'Hello, Flask! 123'
+
+@app.route('/test1', methods=['GET'])
+def test1():
+    print("Received data:test1")
+    return 'test1'
+
 @app.route('/getCal', methods=['POST', 'OPTIONS'])
 def get_cal():
     if request.method == 'OPTIONS':
@@ -67,4 +76,6 @@ def _corsify_actual_response(response):
 
 if __name__ == '__main__':
     #app.run(debug=True)
-    app.run(port=5000)
+    #app.run(port=5000) //doesn't work in codespace with docker
+    app.run(debug=True, host='0.0.0.0',port=5000) 
+    #app.run()
