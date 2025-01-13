@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./calculative-backend
+    ports:
+      - "5000:5000"
+    volumes:
+      - .:/workspace
+    environment:
+      - FLASK_ENV=development
+    
+  oldweb:
+    build: ./calculative-oldweb
+    ports:
+      - "8080:80"
+    volumes:
+      - .:/workspace
+
+  web:
+    build: ./calculative-web
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/workspace

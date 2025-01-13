@@ -6,6 +6,7 @@ docker-compose down
 
 
 Rebuild workspace with Docker:
+docker-compose down 
 docker-compose up --build
 
 Build the backend:
