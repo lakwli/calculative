@@ -1,0 +1,41 @@
+{
+    "name": "Calculative Backend Dev",
+    "build": {
+        "dockerfile": "Dockerfile",
+        "context": ".."
+    },
+    "workspaceFolder": "/app",
+
+    // Equivalent to COPY . .
+    "mounts": [
+        "source=${localWorkspaceFolder},target=/app,type=bind"
+    ],
+
+    // Equivalent to RUN pip install -r requirements.txt
+    "postCreateCommand": "pip install -r requirements.txt",
+
+    // Equivalent to ENTRYPOINT ["python"] CMD ["app/app.py"]
+    "postStartCommand": "python app/app.py",
+
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-python.python",
+                "ms-python.vscode-pylance",
+                "ms-python.black-formatter",
+                "ms-python.debugpy"
+            ]
+        }
+    },
+
+    "remoteEnv": {
+        "FLASK_APP": "app/app.py",
+        "FLASK_ENV": "development",
+        "FLASK_DEBUG": "1",
+        "PYTHONUNBUFFERED": "1"
+    },
+
+    // This only works if the application is actually running
+    "forwardPorts": [5000],
+    "overrideCommand": true
+}
