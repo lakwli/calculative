@@ -23,4 +23,7 @@ services:
       - "3000:3000"
     volumes:
       - ./calculative-web/src:/app/src
+    environment:
+      - WATCHPACK_POLLING=true
+      - CHOKIDAR_USEPOLLING=true
     command: ["npm", "run", "dev"]
