@@ -7,6 +7,10 @@ export default defineConfig({
   server: {
     host: true,  // This allows Vite to listen on all addresses, necessary for Docker
     port: 3000,  // Set the port to 3000
+    watch: {
+      usePolling: true,
+      interval: 1000
+    },
     strictPort: true
   }
 })

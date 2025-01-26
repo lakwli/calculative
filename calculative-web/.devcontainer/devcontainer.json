@@ -1,0 +1,25 @@
+# .devcontainer/devcontainer.json
+{
+    "name": "React Vite Dev",
+    "build": {
+        "dockerfile": "Dockerfile",
+        "context": ".."
+    },
+    "workspaceFolder": "/workspace",
+    "mounts": [
+        "source=${localWorkspaceFolder},target=/workspace,type=bind"
+    ],
+    "postCreateCommand": "npm install",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "dbaeumer.vscode-eslint",
+                "esbenp.prettier-vscode",
+                "dsznajder.es7-react-js-snippets",
+                "formulahendry.auto-rename-tag"
+            ]
+        }
+    },
+    "remoteUser": "vscode",
+    "overrideCommand": true
+}
