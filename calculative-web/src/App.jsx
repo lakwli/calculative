@@ -18,7 +18,7 @@ function App() {
       <CssBaseline />
       <Container className="App">
         <Box display="flex" justifyContent="space-between" alignItems="center" mt={2}>
-          <h1 style={{ margin: 0 }}>CashFlow Simulation 3</h1>
+          <h1 style={{ margin: 0 }}>CashFlow Simulation 1</h1>
           <IconButton onClick={toggleDarkMode} size="small" aria-label="toggle dark mode">
             {darkMode ? <Brightness2Icon /> : <WbSunnyIcon />}
           </IconButton>
