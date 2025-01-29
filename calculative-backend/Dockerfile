@@ -8,5 +8,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
+# Production settings
+# PENV FLASK_ENV=production
+# PENV PYTHONUNBUFFERED=1
+
 ENTRYPOINT ["python"]
 CMD ["app/app.py"]

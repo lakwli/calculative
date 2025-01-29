@@ -4,9 +4,16 @@ pip install -r requirements.txt
 python app/app.py
 docker-compose down
 
+docker stop $(docker ps -aq)
+docker system prune -a
+docker-compose down -v
+
 
 Rebuild workspace with Docker:
+docker-compose down 
 docker-compose up --build
+docker-compose build --no-cache
+docker-compose up --build --force-recreate
 
 Build the backend:
 cd /workspaces/calculative/calculative-backend
@@ -35,5 +42,20 @@ docker build -t calculative-web .
 docker run -p 3001:3000 calculative-web
 
 
+Check Log:
+docker-compose logs -f web
 
 
+
+Clean up:
+# Stop and remove containers, networks, volumes
+docker-compose down -v
+
+# Remove the image
+docker rmi calculative-web
+
+# Clear Docker build cache
+docker builder prune -f
+
+# Rebuild from scratch
+docker-compose up --build
