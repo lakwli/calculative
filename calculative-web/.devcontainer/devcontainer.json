@@ -13,9 +13,10 @@
         "vscode": {
             "extensions": [
                 "dbaeumer.vscode-eslint",
-                "esbenp.prettier-vscode",
                 "dsznajder.es7-react-js-snippets",
-                "formulahendry.auto-rename-tag"
+                "esbenp.prettier-vscode",
+                "formulahendry.auto-rename-tag",
+                "AmazonWebServices.amazon-q-vscode"
             ]
         }
     },

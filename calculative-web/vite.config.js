@@ -11,6 +11,10 @@ export default defineConfig({
       usePolling: true,
       interval: 1000
     },
+    overlay: {
+      warnings: true,
+      errors: true
+    },
     strictPort: true
   }
 })
