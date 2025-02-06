@@ -1,0 +1,21 @@
+FROM node:latest
+
+# Define variables (replace with your actual values)
+ARG USERNAME=vscode
+ARG USER_UID=1000
+ARG USER_GID=1000
+
+# Create the user
+RUN groupadd --gid $USER_GID $USERNAME \
+    && useradd --uid $USER_UID --gid $USER_GID -m $USERNAME \
+    && apt-get update \
+    && apt-get install -y sudo \
+    && echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
+    && chmod 0440 /etc/sudoers.d/$USERNAME \
+    && mkdir -p /home/vscode/.vscode-server \
+    && mkdir -p ~/.npm-global && npm config set prefix '~/.npm-global' \
+    && export PATH=~/.npm-global/bin:$PATH && npm install \
+    && npm install -g npm@latest
+
+# Set the default user
+USER $USERNAME
