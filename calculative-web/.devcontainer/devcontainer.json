@@ -1,5 +1,5 @@
 {
-    "name": "React Vite Dev",
+    "name": "React Vite Dev Container",
     "build": {
         "dockerfile": "Dockerfile",
         "context": ".."
@@ -8,7 +8,8 @@
     "mounts": [
         "source=${localWorkspaceFolder},target=/workspace,type=bind"
     ],
-    "postCreateCommand": "npm install",
+    "remoteUser": "vscode",
+    "postStartCommand": "sudo chown -R vscode:vscode /workspace && npm install",
     "customizations": {
         "vscode": {
             "extensions": [
@@ -20,6 +21,6 @@
             ]
         }
     },
-    "remoteUser": "vscode",
     "overrideCommand": true
-}
+  }
+  

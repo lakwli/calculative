@@ -1,19 +1,28 @@
-FROM node:18-alpine
+# Use the latest Node.js image
+FROM node:latest
 
-WORKDIR /workspace
-
-# Add necessary tools for VS Code and development
-RUN apk add --no-cache \
+# Add necessary tools for development
+RUN apt-get update && apt-get install -y \
     git \
-    bash
+    bash \
+    sudo
 
+# Create the user and group
+RUN groupadd -r vscode && useradd -r -g vscode -m -s /bin/bash vscode && \
+    echo "vscode ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers.d/nopasswd
 
-RUN adduser -D -h /home/vscode -s /bin/bash vscode \
-    && chown -R vscode:vscode /workspace
+# Create home directory for the vscode user and set permissions
+RUN mkdir -p /home/vscode && chown -R vscode:vscode /home/vscode
 
+# Create workspace directory and set permissions
+RUN mkdir -p /workspace && chown -R vscode:vscode /workspace
+
+# Switch to the vscode user
 USER vscode
 
-EXPOSE 3000
+
+
+
 
 #docker container prune
 #docker image prune
