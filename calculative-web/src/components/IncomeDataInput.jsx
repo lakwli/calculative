@@ -58,6 +58,7 @@ import DoneAllIcon from "@mui/icons-material/DoneAll";
 import AddIcon from "@mui/icons-material/Add";
 import PlusOneIcon from "@mui/icons-material/PlusOne";
 import incomeTerms from "../data/incomeTerms.jsx";
+import AutoCompleteComponent from "./library/AutoComplete.jsx"
 
 const IncomeDataInput = ({ open, handleClose, incomeId }) => {
   const { simul, setSimul } = useSimul();
@@ -257,26 +258,16 @@ const IncomeDataInput = ({ open, handleClose, incomeId }) => {
           </IconButton>
           <h2>{incomeId ? t("titles.changeIncome") : t("titles.addIncome")}</h2>
 
-          <Autocomplete
-            freeSolo
-            options={incomeTerms}
-            inputValue={incomeData.name}
-            onInputChange={(event, newInputValue) => {
-              handleInputChange({
-                target: { name: "name", value: newInputValue },
-              });
-            }}
-            onChange={handleAutocompleteChangeName}
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                fullWidth
-                label="Name"
-                name="name"
-                margin="normal"
-              />
-            )}
-          />
+          <AutoCompleteComponent
+  options={incomeTerms}
+  label={t("labels.incomeName")}
+  name="name"
+  value={incomeData.name}
+  onChange={handleInputChange}
+  fullWidth
+  margin="normal"
+/>
+
 
           <TextField
             fullWidth

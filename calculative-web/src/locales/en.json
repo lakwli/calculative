@@ -6,6 +6,7 @@
     "withdrwalStartAge": "Withdrawal (Start) Age",
     "incomeBeginAge": "Income Start Age",
     "incomeEndYear": "Income End Age",
+    "incomeName": "Income Name",
     "incomeAmount": "Initial Amount",
     "incomeAmountType": "Initial Amount Basis",
     "incomeType": "Income Type",
