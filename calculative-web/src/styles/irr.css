@@ -1,0 +1,28 @@
+.cashflow-row {
+    position: relative;
+  }
+  
+  .cashflow-row:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+  }
+  
+  .cashflow-row.drag-over::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background-color: rgba(0, 0, 0, 0.12);
+    pointer-events: none;
+  }
+  
+  .cashflow-row.dragging {
+    opacity: 0.5;
+    background: #f5f5f5;
+  }
+  
+  .cashflow-row.drag-over {
+    border-top: 2px solid transparent;
+    position: relative;
+  }
