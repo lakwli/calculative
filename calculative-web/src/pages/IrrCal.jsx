@@ -1,7 +1,7 @@
-import React, { useState } from "react";
-import "../styles/App.css"; // Import existing styles
-import "../styles/irr.css"; // Import existing styles
-import "../index.css"; // Import existing styles
+import React, { useState, useRef } from "react";
+import "../styles/App.css";
+import "../styles/irr.css";
+import "../index.css";
 import CustomTextField from "../styles/textfieldStyles";
 import { PrimaryButton, SecondaryButton } from "../styles/buttonStyles";
 import {
@@ -9,7 +9,6 @@ import {
   Select,
   MenuItem,
   FormControl,
-  InputLabel,
   Typography,
 } from "@mui/material";
 import Grid from "@mui/material/Grid2";
@@ -82,7 +81,6 @@ const generateVerificationTable = (cashflows, irr) => {
     })),
   ];
 
-  // Add EOY dates
   Array.from(years).forEach((year) => {
     const eoyDate = `${year}-12-31`;
     if (!sortedCashflows.some((cf) => cf.date === eoyDate)) {
@@ -94,26 +92,20 @@ const generateVerificationTable = (cashflows, irr) => {
     }
   });
 
-  // Find the last actual transaction
   const lastTransaction = sortedCashflows[sortedCashflows.length - 1];
   const lastTransactionDate = new Date(lastTransaction.date);
   const preFinalDate = new Date(lastTransactionDate);
   preFinalDate.setDate(preFinalDate.getDate() - 1);
 
-  // Add pre-final balance date
   allDates.push({
     date: preFinalDate.toISOString().split("T")[0],
     isTransaction: false,
     isPreFinal: true,
   });
 
-  // Mark the last transaction
   allDates.find((d) => d.date === lastTransaction.date).isFinal = true;
-
-  // Sort all dates
   allDates.sort((a, b) => new Date(a.date) - new Date(b.date));
 
-  // Process each date
   allDates.forEach((entry) => {
     const date = new Date(entry.date);
     const yearFraction = (date - firstDate) / (365 * 24 * 60 * 60 * 1000);
@@ -130,8 +122,6 @@ const generateVerificationTable = (cashflows, irr) => {
     if (entry.isTransaction) {
       const cf = entry.cashflow;
       transactionAmount = cf.type === "deposit" ? cf.amount : -cf.amount;
-
-      // Update the final balance with both growth and transaction
       balance += transactionAmount;
 
       result.push({
@@ -156,7 +146,6 @@ const generateVerificationTable = (cashflows, irr) => {
         isFinal: false,
       });
     } else {
-      // EOY projection
       result.push({
         date: entry.date,
         type: "EOY Balance",
@@ -206,45 +195,41 @@ const IrrCal = () => {
       date: "",
       amount: "",
       type: "deposit",
-      occurrence: { frequency: "none", count: 1 },
+      occurrence: { frequency: "none", count: 1 }
     },
     {
       id: 2,
       date: "",
       amount: "",
       type: "received",
-      occurrence: { frequency: "none", count: 1 },
+      occurrence: { frequency: "none", count: 1 }
     },
   ]);
   const [result, setResult] = useState(null);
   const [draggedId, setDraggedId] = useState(null);
+  const formRef = useRef(null);
 
   const handleDragStart = (e, id) => {
     setDraggedId(id);
     e.currentTarget.classList.add("dragging");
   };
 
-// Update the drag handlers
-const handleDragEnd = (e) => {
-  e.currentTarget.classList.remove('dragging');
-  setDraggedId(null);
-  // Remove drag-over class from all rows
-  document.querySelectorAll('.cashflow-row').forEach(row => {
-    row.classList.remove('drag-over');
-  });
-};
-
+  const handleDragEnd = (e) => {
+    e.currentTarget.classList.remove('dragging');
+    setDraggedId(null);
+    document.querySelectorAll('.cashflow-row').forEach(row => {
+      row.classList.remove('drag-over');
+    });
+  };
 
   const handleDragOver = (e, id) => {
     e.preventDefault();
     if (draggedId === id) return;
 
-      // Remove drag-over class from all rows first
-  document.querySelectorAll('.cashflow-row').forEach(row => {
-    row.classList.remove('drag-over');
-  });
-  // Add drag-over class only to current target
-  e.currentTarget.classList.add('drag-over');
+    document.querySelectorAll('.cashflow-row').forEach(row => {
+      row.classList.remove('drag-over');
+    });
+    e.currentTarget.classList.add('drag-over');
 
     const draggedIndex = cashflows.findIndex((cf) => cf.id === draggedId);
     const hoverIndex = cashflows.findIndex((cf) => cf.id === id);
@@ -256,15 +241,12 @@ const handleDragEnd = (e) => {
 
     if (draggedRow && hoverRow) {
       const hoverBoundingRect = hoverRow.getBoundingClientRect();
-      const hoverMiddleY =
-        (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
+      const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
       const clientOffset = e.clientY - hoverBoundingRect.top;
 
-      // Only perform the move when mouse has crossed half of the item's height
       if (draggedIndex < hoverIndex && clientOffset < hoverMiddleY) return;
       if (draggedIndex > hoverIndex && clientOffset > hoverMiddleY) return;
 
-      // Perform the reorder
       const newCashflows = [...cashflows];
       const [removed] = newCashflows.splice(draggedIndex, 1);
       newCashflows.splice(hoverIndex, 0, removed);
@@ -288,7 +270,7 @@ const handleDragEnd = (e) => {
         date: "",
         amount: "",
         type: "deposit",
-        occurrence: { frequency: "none", count: 1 },
+        occurrence: { frequency: "none", count: 1 }
       },
     ]);
   };
@@ -319,35 +301,94 @@ const handleDragEnd = (e) => {
     );
   };
 
+  const clearAllValidation = () => {
+    if (!formRef.current) return;
+    const inputs = formRef.current.querySelectorAll('input');
+    inputs.forEach(input => {
+      input.setCustomValidity('');
+    });
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
+    clearAllValidation();
 
-    const isValid = cashflows.every(
-      (cf) =>
-        cf.date &&
-        cf.amount &&
-        !isNaN(parseFloat(cf.amount)) &&
-        parseFloat(cf.amount) > 0
-    );
-
-    if (!isValid) {
-      alert("Please fill all fields with valid values");
+    // Check required fields
+    const missingRequired = cashflows.some(cf => !cf.date || !cf.amount);
+    if (missingRequired) {
+      const form = formRef.current;
+      if (form) {
+        const emptyField = form.querySelector('input[required]:invalid');
+        if (emptyField) {
+          emptyField.setCustomValidity('This field is required');
+          emptyField.reportValidity();
+          return;
+        }
+      }
       return;
     }
 
-    const expandedCashflows = cashflows
-      .flatMap((cf) =>
-        generateCashflows(
-          {
-            date: cf.date,
-            amount: parseFloat(cf.amount),
-            type: cf.type,
-          },
-          cf.occurrence
-        )
-      )
-      .sort((a, b) => new Date(a.date) - new Date(b.date));
+    // Validate amounts are positive numbers
+    const invalidAmount = cashflows.some(cf => {
+      const amount = parseFloat(cf.amount);
+      return isNaN(amount) || amount <= 0;
+    });
 
+    if (invalidAmount) {
+      const firstInvalidInput = document.querySelector(`input[data-type="amount"]:invalid`);
+      if (firstInvalidInput) {
+        firstInvalidInput.setCustomValidity('Amount must be greater than zero');
+        firstInvalidInput.reportValidity();
+        return;
+      }
+    }
+
+    // Process for IRR calculation
+    const expandedCashflows = cashflows.flatMap((cf) =>
+      generateCashflows(
+        {
+          date: cf.date,
+          amount: parseFloat(cf.amount),
+          type: cf.type,
+        },
+        cf.occurrence
+      )
+    ).sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    // Calculate totals and validate
+    const totalContributions = expandedCashflows
+      .filter(cf => cf.type === 'deposit')
+      .reduce((sum, cf) => sum + parseFloat(cf.amount), 0);
+
+    const totalReceived = expandedCashflows
+      .filter(cf => cf.type === 'received')
+      .reduce((sum, cf) => sum + parseFloat(cf.amount), 0);
+
+    if (totalReceived <= totalContributions) {
+      const message = `Total received must exceed $${totalContributions.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
+      
+      // Show validation message on received amounts
+      cashflows.forEach(cf => {
+        if (cf.type === 'received') {
+          const input = document.getElementById(`amount-${cf.id}`);
+          if (input) {
+            input.setCustomValidity(message);
+            input.reportValidity();
+
+            // Clear validation after 5 seconds
+            setTimeout(() => {
+              if (input && document.contains(input)) {
+                input.setCustomValidity('');
+              }
+            }, 5000);
+          }
+        }
+      });
+
+      return;
+    }
+
+    // Calculate IRR and update results
     const irr = calculateIRR(expandedCashflows);
     const verificationTable = generateVerificationTable(expandedCashflows, irr);
 
@@ -360,15 +401,8 @@ const handleDragEnd = (e) => {
   return (
     <Box sx={{ mt: 1 }}>
       <Grid container spacing={2}>
-      {/** 
         <Grid size={{ xs: 12, sm: 12 }}>
-          <Typography variant="h4" gutterBottom>
-            Dynamic Cashflow IRR Calculator
-          </Typography>
-        </Grid> */}
-
-        <Grid size={{ xs: 12, sm: 12 }}>
-          <form onSubmit={handleSubmit}>
+          <form ref={formRef} onSubmit={handleSubmit} noValidate>
             <Box sx={{ width: "100%", mt: 2, mb: 3 }}>
               {cashflows.map((cf) => (
                 <Box
@@ -394,62 +428,76 @@ const handleDragEnd = (e) => {
                   onDragEnter={handleDragEnter}
                   onDragLeave={handleDragLeave}
                 >
-                  <Box
-                    sx={{ width: "30px", cursor: "move", textAlign: "center" }}
-                  >
-                    ⋮⋮
-                  </Box>
+                  <Box sx={{ width: "30px", cursor: "move", textAlign: "center" }}>⋮⋮</Box>
 
                   <FormControl sx={{ minWidth: "150px" }} size="small">
-                    
                     <Select
                       value={cf.type}
-                      onChange={(e) =>
-                        handleCashflowChange(cf.id, "type", e.target.value)
-                      }
+                      onChange={(e) => handleCashflowChange(cf.id, "type", e.target.value)}
                     >
                       <MenuItem value="deposit">Contribute</MenuItem>
                       <MenuItem value="received">Received</MenuItem>
                     </Select>
                   </FormControl>
 
-                  <CustomTextField
-                    size="small"
+                  <input
                     type="date"
                     value={cf.date}
-                    onChange={(e) =>
-                      handleCashflowChange(cf.id, "date", e.target.value)
-                    }
+                    onChange={(e) => {
+                      handleCashflowChange(cf.id, "date", e.target.value);
+                      e.target.setCustomValidity('');
+                    }}
+                    onInvalid={(e) => {
+                      if (!e.target.value) {
+                        e.target.setCustomValidity('Please select a date');
+                      }
+                    }}
                     required
-                    sx={{ width: "180px" }}
-                    InputLabelProps={{ shrink: true }}
+                    aria-label="Date"
+                    style={{
+                      width: "180px",
+                      height: "40px",
+                      padding: "8.5px 14px",
+                      border: "1px solid rgba(0, 0, 0, 0.23)",
+                      borderRadius: "4px",
+                      fontSize: "1rem",
+                      fontFamily: '"Roboto","Helvetica","Arial",sans-serif',
+                      cursor: "pointer",
+                      backgroundColor: "transparent",
+                      color: "inherit"
+                    }}
                   />
 
                   <NumericFormat
                     customInput={CustomTextField}
+                    id={`amount-${cf.id}`}
+                    data-type="amount"
                     size="small"
                     value={cf.amount}
-                    onValueChange={(values) =>
-                      handleCashflowChange(cf.id, "amount", values.value)
-                    }
+                    onValueChange={(values) => {
+                      handleCashflowChange(cf.id, "amount", values.value);
+                      const input = document.getElementById(`amount-${cf.id}`);
+                      if (input) {
+                        input.setCustomValidity('');
+                      }
+                    }}
                     thousandSeparator
                     prefix="$"
                     placeholder="Amount"
                     decimalScale={2}
                     required
+                    min="0.01"
+                    isAllowed={(values) => {
+                      const { floatValue } = values;
+                      return floatValue === undefined || floatValue > 0;
+                    }}
                     sx={{ width: "120px" }}
                   />
 
                   <FormControl sx={{ minWidth: "120px" }} size="small">
                     <Select
                       value={cf.occurrence.frequency}
-                      onChange={(e) =>
-                        handleOccurrenceChange(
-                          cf.id,
-                          "frequency",
-                          e.target.value
-                        )
-                      }
+                      onChange={(e) => handleOccurrenceChange(cf.id, "frequency", e.target.value)}
                     >
                       <MenuItem value="none">One time</MenuItem>
                       <MenuItem value="year">Yearly</MenuItem>
@@ -464,10 +512,7 @@ const handleDragEnd = (e) => {
                         type="number"
                         value={cf.occurrence.count}
                         onChange={(e) => {
-                          const value = Math.min(
-                            999,
-                            parseInt(e.target.value) || 0
-                          );
+                          const value = Math.min(999, parseInt(e.target.value) || 0);
                           handleOccurrenceChange(cf.id, "count", value);
                         }}
                         inputProps={{
@@ -502,8 +547,7 @@ const handleDragEnd = (e) => {
                             border: "none",
                           },
                           "&:hover": {
-                            backgroundColor: (theme) =>
-                              alpha(theme.palette.error.main, 0.08),
+                            backgroundColor: (theme) => alpha(theme.palette.error.main, 0.08),
                             border: "none",
                             outline: "none",
                             "& .MuiSvgIcon-root": {
@@ -521,11 +565,7 @@ const handleDragEnd = (e) => {
             </Box>
 
             <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
-              <SecondaryButton
-                type="button"
-                onClick={handleAddCashflow}
-                className="add-btn"
-              >
+              <SecondaryButton type="button" onClick={handleAddCashflow} className="add-btn">
                 Add Cashflow
               </SecondaryButton>
 
@@ -538,57 +578,18 @@ const handleDragEnd = (e) => {
 
         {result && (
           <Grid xs={12} className="results" sx={{ mt: 4 }}>
-            <Typography variant="h5" gutterBottom>
-              Results
-            </Typography>
-            <Typography
-              variant="body1"
-              sx={{
-                fontSize: "1.25rem",
-                fontWeight: 600,
-                color: "primary.main",
-                mb: 3,
-              }}
-            >
+            <Typography variant="h5" gutterBottom>Results</Typography>
+            <Typography variant="body1" sx={{ fontSize: "1.25rem", fontWeight: 600, color: "primary.main", mb: 3 }}>
               Internal Rate of Return (IRR): {result.irr.toFixed(2)}%
             </Typography>
 
-            <Typography variant="h6" gutterBottom>
-              Verification Table
-            </Typography>
-            <Typography
-              variant="body2"
-              sx={{
-                fontStyle: "italic",
-                color: "text.secondary",
-                mb: 2,
-              }}
-            >
-              This table demonstrates the equivalent scenario of a fixed-term
-              deposit with an annual compounding rate matching the calculated
+            <Typography variant="h6" gutterBottom>Verification Table</Typography>
+            <Typography variant="body2" sx={{ fontStyle: "italic", color: "text.secondary", mb: 2 }}>
+              This table demonstrates the equivalent scenario of a fixed-term deposit with an annual compounding rate matching the calculated
               IRR, validating the return calculation over the investment period.
             </Typography>
 
-            <TableContainer
-              component={Paper}
-              sx={{
-                mb: 4,
-                boxShadow: 2,
-                borderRadius: 1,
-                overflow: "hidden",
-                "& .MuiTableHead-root": {
-                  bgcolor: (theme) =>
-                    theme.palette.mode === "light" ? "grey.800" : "grey.100",
-                },
-                "& .MuiTableHead-root .MuiTableCell-head": {
-                  color: (theme) =>
-                    theme.palette.mode === "light"
-                      ? "common.white"
-                      : "common.black",
-                  fontWeight: 600,
-                },
-              }}
-            >
+            <TableContainer component={Paper} sx={{ mb: 4, boxShadow: 2, borderRadius: 1, overflow: "hidden" }}>
               <Table size="small">
                 <TableHead>
                   <TableRow>
@@ -601,73 +602,17 @@ const handleDragEnd = (e) => {
                 </TableHead>
                 <TableBody>
                   {result.table.map((row, index) => (
-                    <TableRow
-                      key={index}
-                      sx={(theme) => ({
-                        "&.eoy-row": {
-                          backgroundColor:
-                            theme.palette.mode === "light"
-                              ? alpha(theme.palette.primary.main, 0.08)
-                              : alpha(theme.palette.primary.main, 0.15),
-                          "& td": {
-                            color: theme.palette.primary.main,
-                            fontWeight: 600,
-                            borderBottom: `2px solid ${theme.palette.primary.main}`,
-                          },
-                        },
-                        "&.pre-final-row": {
-                          backgroundColor:
-                            theme.palette.mode === "light"
-                              ? alpha(theme.palette.success.main, 0.08)
-                              : alpha(theme.palette.success.main, 0.15),
-                          "& td": {
-                            color: theme.palette.success.main,
-                            fontWeight: 600,
-                            borderBottom: `2px solid ${theme.palette.success.main}`,
-                          },
-                        },
-                        "&:hover": {
-                          backgroundColor:
-                            theme.palette.mode === "light"
-                              ? alpha(theme.palette.action.hover, 0.1)
-                              : alpha(theme.palette.action.hover, 0.2),
-                        },
-                      })}
-                      className={
-                        row.isEoy
-                          ? "eoy-row"
-                          : row.isPreFinal
-                          ? "pre-final-row"
-                          : ""
-                      }
-                    >
+                    <TableRow key={index}>
                       <TableCell>{row.date}</TableCell>
                       <TableCell>{row.type}</TableCell>
                       <TableCell align="right" sx={{ fontFamily: "monospace" }}>
-                        $
-                        {row.type === "withdraw"
-                          ? `-${row.amount.toLocaleString("en-US", {
-                              minimumFractionDigits: 2,
-                              maximumFractionDigits: 2,
-                            })}`
-                          : row.amount.toLocaleString("en-US", {
-                              minimumFractionDigits: 2,
-                              maximumFractionDigits: 2,
-                            })}
+                        ${row.amount.toLocaleString("en-US", { minimumFractionDigits: 2 })}
                       </TableCell>
                       <TableCell align="right" sx={{ fontFamily: "monospace" }}>
-                        $
-                        {row.growthAmount.toLocaleString("en-US", {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })}
+                        ${row.growthAmount.toLocaleString("en-US", { minimumFractionDigits: 2 })}
                       </TableCell>
                       <TableCell align="right" sx={{ fontFamily: "monospace" }}>
-                        $
-                        {row.balance.toLocaleString("en-US", {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })}
+                        ${row.balance.toLocaleString("en-US", { minimumFractionDigits: 2 })}
                       </TableCell>
                     </TableRow>
                   ))}
