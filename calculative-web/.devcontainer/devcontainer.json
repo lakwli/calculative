@@ -10,17 +10,6 @@
     ],
     "remoteUser": "vscode",
     "postStartCommand": "sudo chown -R vscode:vscode /workspace && npm install",
-    "customizations": {
-        "vscode": {
-            "extensions": [
-                "dbaeumer.vscode-eslint",
-                "dsznajder.es7-react-js-snippets",
-                "esbenp.prettier-vscode",
-                "formulahendry.auto-rename-tag",
-                "AmazonWebServices.amazon-q-vscode"
-            ]
-        }
-    },
     "overrideCommand": true
   }
   
