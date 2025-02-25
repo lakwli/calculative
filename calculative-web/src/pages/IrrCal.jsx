@@ -10,13 +10,14 @@ import {
   MenuItem,
   FormControl,
   Typography,
+  IconButton,
 } from "@mui/material";
 import Grid from "@mui/material/Grid2";
 import { NumericFormat } from "react-number-format";
 import {
   Table,
   TableBody,
-  TableCell,
+  TableCell,  
   TableContainer,
   TableHead,
   TableRow,
@@ -24,6 +25,7 @@ import {
 } from "@mui/material";
 import { alpha } from "@mui/material/styles";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
+import AutorenewIcon from '@mui/icons-material/Autorenew';
 
 const calculateIRR = (cashflows) => {
   let guess = 0.1;
@@ -63,7 +65,6 @@ const generateVerificationTable = (cashflows, irr) => {
   const result = [];
   let lastYearFraction = 0;
 
-  // Get all years between first and last transaction
   const startYear = firstDate.getFullYear();
   const endYear = lastDate.getFullYear();
   const years = new Set();
@@ -71,7 +72,6 @@ const generateVerificationTable = (cashflows, irr) => {
     years.add(year);
   }
 
-  // Process actual cashflows and EOY projections
   const allDates = [
     ...sortedCashflows.map((cf) => ({
       date: cf.date,
@@ -176,7 +176,11 @@ const generateCashflows = (baseFlow, occurrence) => {
     if (occurrence.frequency === "year") {
       newDate.setFullYear(baseDate.getFullYear() + i);
     } else if (occurrence.frequency === "quarter") {
-      newDate.setMonth(baseDate.getMonth() + i * 3);
+      const totalMonths = i * 3;
+      const yearsToAdd = Math.floor(totalMonths / 12);
+      const remainingMonths = totalMonths % 12;
+      newDate.setFullYear(baseDate.getFullYear() + yearsToAdd);
+      newDate.setMonth(baseDate.getMonth() + remainingMonths);
     }
 
     flows.push({
@@ -189,10 +193,16 @@ const generateCashflows = (baseFlow, occurrence) => {
 };
 
 const IrrCal = () => {
+  const getTomorrowDate = () => {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    return tomorrow.toISOString().split('T')[0];
+  };
+
   const [cashflows, setCashflows] = useState([
     {
       id: 1,
-      date: "",
+      date: getTomorrowDate(),
       amount: "",
       type: "deposit",
       occurrence: { frequency: "none", count: 1 }
@@ -262,14 +272,51 @@ const IrrCal = () => {
     e.currentTarget.classList.remove("drag-over");
   };
 
+  const handleAutoFill = (currentId) => {
+    const currentIndex = cashflows.findIndex(cf => cf.id === currentId);
+    if (currentIndex <= 0) return;
+
+    const currentFlow = cashflows[currentIndex];
+    const prevFlow = cashflows[currentIndex - 1];
+    if (!prevFlow || prevFlow.type !== currentFlow.type || !prevFlow.date || prevFlow.occurrence.frequency === 'none') return;
+
+    const prevDate = new Date(prevFlow.date);
+    const newDate = new Date(prevDate);
+    if (prevFlow.occurrence.frequency === 'year') {
+      newDate.setFullYear(prevDate.getFullYear() + prevFlow.occurrence.count);
+    } else if (prevFlow.occurrence.frequency === 'quarter') {
+      const totalMonths = prevFlow.occurrence.count * 3;
+      const yearsToAdd = Math.floor(totalMonths / 12);
+      const remainingMonths = totalMonths % 12;
+      newDate.setFullYear(prevDate.getFullYear() + yearsToAdd);
+      newDate.setMonth(prevDate.getMonth() + remainingMonths);
+    }
+    
+    handleCashflowChange(currentId, "date", newDate.toISOString().split('T')[0]);
+  };
+
+  const canAutoFill = (currentId) => {
+    const currentIndex = cashflows.findIndex(cf => cf.id === currentId);
+    if (currentIndex <= 0) return false;
+
+    const currentFlow = cashflows[currentIndex];
+    const prevFlow = cashflows[currentIndex - 1];
+
+    return currentFlow.type === prevFlow.type &&
+           prevFlow.date && 
+           prevFlow.occurrence.frequency !== 'none' &&
+           prevFlow.occurrence.count > 0;
+  };
+
   const handleAddCashflow = () => {
+    const lastCashflow = cashflows[cashflows.length - 1];
     setCashflows([
       ...cashflows,
       {
         id: Date.now(),
         date: "",
         amount: "",
-        type: "deposit",
+        type: lastCashflow.type,
         occurrence: { frequency: "none", count: 1 }
       },
     ]);
@@ -313,7 +360,7 @@ const IrrCal = () => {
     e.preventDefault();
     clearAllValidation();
 
-    // Check required fields
+    // Missing required fields validation
     const missingRequired = cashflows.some(cf => !cf.date || !cf.amount);
     if (missingRequired) {
       const form = formRef.current;
@@ -328,7 +375,6 @@ const IrrCal = () => {
       return;
     }
 
-    // Validate amounts are positive numbers
     const invalidAmount = cashflows.some(cf => {
       const amount = parseFloat(cf.amount);
       return isNaN(amount) || amount <= 0;
@@ -343,7 +389,7 @@ const IrrCal = () => {
       }
     }
 
-    // Process for IRR calculation
+    // Process cashflows and calculate IRR
     const expandedCashflows = cashflows.flatMap((cf) =>
       generateCashflows(
         {
@@ -355,7 +401,6 @@ const IrrCal = () => {
       )
     ).sort((a, b) => new Date(a.date) - new Date(b.date));
 
-    // Calculate totals and validate
     const totalContributions = expandedCashflows
       .filter(cf => cf.type === 'deposit')
       .reduce((sum, cf) => sum + parseFloat(cf.amount), 0);
@@ -367,15 +412,12 @@ const IrrCal = () => {
     if (totalReceived <= totalContributions) {
       const message = `Total received must exceed $${totalContributions.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
       
-      // Show validation message on received amounts
       cashflows.forEach(cf => {
         if (cf.type === 'received') {
           const input = document.getElementById(`amount-${cf.id}`);
           if (input) {
             input.setCustomValidity(message);
             input.reportValidity();
-
-            // Clear validation after 5 seconds
             setTimeout(() => {
               if (input && document.contains(input)) {
                 input.setCustomValidity('');
@@ -384,11 +426,9 @@ const IrrCal = () => {
           }
         }
       });
-
       return;
     }
 
-    // Calculate IRR and update results
     const irr = calculateIRR(expandedCashflows);
     const verificationTable = generateVerificationTable(expandedCashflows, irr);
 
@@ -400,225 +440,359 @@ const IrrCal = () => {
 
   return (
     <Box sx={{ mt: 1 }}>
-      <Grid container spacing={2}>
-        <Grid size={{ xs: 12, sm: 12 }}>
-          <form ref={formRef} onSubmit={handleSubmit} noValidate>
-            <Box sx={{ width: "100%", mt: 2, mb: 3 }}>
-              {cashflows.map((cf) => (
-                <Box
-                  key={cf.id}
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 2,
-                    mb: 2,
-                    width: "100%",
-                    "& .MuiFormControl-root": {
-                      height: "40px",
-                    },
-                    "& .MuiInputBase-root": {
-                      height: "40px",
-                    },
-                  }}
-                  className="cashflow-row"
-                  draggable="true"
-                  onDragStart={(e) => handleDragStart(e, cf.id)}
-                  onDragEnd={handleDragEnd}
-                  onDragOver={(e) => handleDragOver(e, cf.id)}
-                  onDragEnter={handleDragEnter}
-                  onDragLeave={handleDragLeave}
-                >
-                  <Box sx={{ width: "30px", cursor: "move", textAlign: "center" }}>⋮⋮</Box>
-
-                  <FormControl sx={{ minWidth: "150px" }} size="small">
-                    <Select
-                      value={cf.type}
-                      onChange={(e) => handleCashflowChange(cf.id, "type", e.target.value)}
-                    >
-                      <MenuItem value="deposit">Contribute</MenuItem>
-                      <MenuItem value="received">Received</MenuItem>
-                    </Select>
-                  </FormControl>
-
-                  <input
-                    type="date"
-                    value={cf.date}
-                    onChange={(e) => {
-                      handleCashflowChange(cf.id, "date", e.target.value);
-                      e.target.setCustomValidity('');
+      <Grid container spacing={0} sx={{ mt: 1 }}>
+        <Grid item xs={12} sx={{ px: 3 }}>
+          <Paper elevation={2} sx={{ width: '100%', p: 3, borderRadius: 2, mb: 3, background: 'linear-gradient(to right, #ffffff, #f8f9fa)', boxSizing: 'border-box' }}>
+            <Typography variant="h5" gutterBottom sx={{ color: 'text.primary', fontWeight: 500, mb: 3 }}>
+              Fund Return Calculator
+            </Typography>
+            <form ref={formRef} onSubmit={handleSubmit} noValidate>
+              <Box sx={{ 
+                width: "100%", 
+                mb: 3,
+                '& .MuiFormControl-root, & input[type="date"]': {
+                  backgroundColor: '#ffffff',
+                  boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                  transition: 'all 0.2s ease-in-out',
+                  '&:hover': {
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                  },
+                  '&:focus-within': {
+                    boxShadow: '0 0 0 2px rgba(25, 118, 210, 0.2)'
+                  }
+                }
+              }}>
+                {cashflows.map((cf) => (
+                  <Box
+                    key={cf.id}
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 2,
+                      mb: 2,
+                      width: "100%",
+                      "& .MuiFormControl-root": {
+                        height: "40px",
+                      },
+                      "& .MuiInputBase-root": {
+                        height: "40px",
+                      },
                     }}
-                    onInvalid={(e) => {
-                      if (!e.target.value) {
-                        e.target.setCustomValidity('Please select a date');
-                      }
-                    }}
-                    required
-                    aria-label="Date"
-                    style={{
-                      width: "180px",
-                      height: "40px",
-                      padding: "8.5px 14px",
-                      border: "1px solid rgba(0, 0, 0, 0.23)",
-                      borderRadius: "4px",
-                      fontSize: "1rem",
-                      fontFamily: '"Roboto","Helvetica","Arial",sans-serif',
-                      cursor: "pointer",
-                      backgroundColor: "transparent",
-                      color: "inherit"
-                    }}
-                  />
+                    className="cashflow-row"
+                    draggable="true"
+                    onDragStart={(e) => handleDragStart(e, cf.id)}
+                    onDragEnd={handleDragEnd}
+                    onDragOver={(e) => handleDragOver(e, cf.id)}
+                    onDragEnter={handleDragEnter}
+                    onDragLeave={handleDragLeave}
+                  >
+                    <Box sx={{ width: "30px", cursor: "move", textAlign: "center" }}>⋮⋮</Box>
 
-                  <NumericFormat
-                    customInput={CustomTextField}
-                    id={`amount-${cf.id}`}
-                    data-type="amount"
-                    size="small"
-                    value={cf.amount}
-                    onValueChange={(values) => {
-                      handleCashflowChange(cf.id, "amount", values.value);
-                      const input = document.getElementById(`amount-${cf.id}`);
-                      if (input) {
-                        input.setCustomValidity('');
-                      }
-                    }}
-                    thousandSeparator
-                    prefix="$"
-                    placeholder="Amount"
-                    decimalScale={2}
-                    required
-                    min="0.01"
-                    isAllowed={(values) => {
-                      const { floatValue } = values;
-                      return floatValue === undefined || floatValue > 0;
-                    }}
-                    sx={{ width: "120px" }}
-                  />
+                    <FormControl sx={{ minWidth: "150px" }} size="small">
+                      <Select
+                        value={cf.type}
+                        onChange={(e) => handleCashflowChange(cf.id, "type", e.target.value)}
+                      >
+                        <MenuItem value="deposit">Contribute</MenuItem>
+                        <MenuItem value="received">Received</MenuItem>
+                      </Select>
+                    </FormControl>
 
-                  <FormControl sx={{ minWidth: "120px" }} size="small">
-                    <Select
-                      value={cf.occurrence.frequency}
-                      onChange={(e) => handleOccurrenceChange(cf.id, "frequency", e.target.value)}
-                    >
-                      <MenuItem value="none">One time</MenuItem>
-                      <MenuItem value="year">Yearly</MenuItem>
-                      <MenuItem value="quarter">Quarterly</MenuItem>
-                    </Select>
-                  </FormControl>
-
-                  <Box sx={{ width: "80px" }}>
-                    {cf.occurrence.frequency !== "none" ? (
-                      <CustomTextField
-                        size="small"
-                        type="number"
-                        value={cf.occurrence.count}
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, minWidth: '220px' }}>
+                      <input
+                        type="date"
+                        value={cf.date}
                         onChange={(e) => {
-                          const value = Math.min(999, parseInt(e.target.value) || 0);
-                          handleOccurrenceChange(cf.id, "count", value);
+                          handleCashflowChange(cf.id, "date", e.target.value);
+                          e.target.setCustomValidity('');
                         }}
-                        inputProps={{
-                          min: "1",
-                          max: "999",
-                          maxLength: 3,
+                        onInvalid={(e) => {
+                          if (!e.target.value) {
+                            e.target.setCustomValidity('Please select a date');
+                          }
                         }}
                         required
-                        fullWidth
+                        aria-label="Date"
+                        style={{
+                          width: "180px",
+                          height: "40px",
+                          padding: "8.5px 14px",
+                          border: "1px solid rgba(0, 0, 0, 0.23)",
+                          borderRadius: "4px",
+                          fontSize: "1rem",
+                          fontFamily: '"Roboto","Helvetica","Arial",sans-serif',
+                          cursor: "pointer",
+                          backgroundColor: "transparent",
+                          color: "inherit"
+                        }}
                       />
-                    ) : (
-                      <Box sx={{ height: "40px" }} />
-                    )}
-                  </Box>
-
-                  <Box sx={{ width: "40px" }}>
-                    {cashflows.length > 2 && (
-                      <SecondaryButton
-                        type="button"
-                        onClick={() => handleRemoveCashflow(cf.id)}
-                        className="remove-btn"
+                      <IconButton
                         size="small"
+                        onClick={() => handleAutoFill(cf.id)}
+                        disabled={!canAutoFill(cf.id)}
                         sx={{
-                          minWidth: "36px",
-                          height: "36px",
-                          p: 0,
-                          color: "error.main",
-                          border: "none",
-                          outline: "none",
-                          "&:focus": {
-                            outline: "none",
-                            border: "none",
-                          },
-                          "&:hover": {
-                            backgroundColor: (theme) => alpha(theme.palette.error.main, 0.08),
-                            border: "none",
-                            outline: "none",
-                            "& .MuiSvgIcon-root": {
-                              color: "error.dark",
-                            },
-                          },
+                          opacity: canAutoFill(cf.id) ? 1 : 0.3,
+                          transition: 'opacity 0.2s',
+                          width: '32px',
+                          height: '32px'
                         }}
                       >
-                        <DeleteOutlineIcon fontSize="small" />
-                      </SecondaryButton>
-                    )}
+                        <AutorenewIcon fontSize="small" />
+                      </IconButton>
+                    </Box>
+
+                    <NumericFormat
+                      customInput={CustomTextField}
+                      id={`amount-${cf.id}`}
+                      data-type="amount"
+                      size="small"
+                      value={cf.amount}
+                      onValueChange={(values) => {
+                        handleCashflowChange(cf.id, "amount", values.value);
+                        const input = document.getElementById(`amount-${cf.id}`);
+                        if (input) {
+                          input.setCustomValidity('');
+                        }
+                      }}
+                      thousandSeparator
+                      prefix="$"
+                      placeholder="Amount"
+                      decimalScale={2}
+                      required
+                      min="0.01"
+                      isAllowed={(values) => {
+                        const { floatValue } = values;
+                        return floatValue === undefined || floatValue > 0;
+                      }}
+                      sx={{ width: "120px", "& input": { textAlign: "right" } }}
+                    />
+
+                    <FormControl sx={{ minWidth: "120px" }} size="small">
+                      <Select
+                        value={cf.occurrence.frequency}
+                        onChange={(e) => handleOccurrenceChange(cf.id, "frequency", e.target.value)}
+                      >
+                        <MenuItem value="none">One time</MenuItem>
+                        <MenuItem value="year">Yearly</MenuItem>
+                        <MenuItem value="quarter">Quarterly</MenuItem>
+                      </Select>
+                    </FormControl>
+
+                    <Box sx={{ width: "80px" }}>
+                      {cf.occurrence.frequency !== "none" ? (
+                        <CustomTextField
+                          size="small"
+                          type="number"
+                          value={cf.occurrence.count}
+                          onChange={(e) => {
+                            const value = Math.min(999, parseInt(e.target.value) || 0);
+                            handleOccurrenceChange(cf.id, "count", value);
+                          }}
+                          inputProps={{
+                            min: "1",
+                            max: "999",
+                            maxLength: 3,
+                          }}
+                          required
+                          fullWidth
+                          sx={{ "& input": { textAlign: "right" } }}
+                        />
+                      ) : (
+                        <Box sx={{ height: "40px" }} />
+                      )}
+                    </Box>
+
+                    <Box sx={{ width: "40px" }}>
+                      {cashflows.length > 2 && (
+                        <SecondaryButton
+                          type="button"
+                          onClick={() => handleRemoveCashflow(cf.id)}
+                          className="remove-btn"
+                          size="small"
+                          sx={{
+                            minWidth: "36px",
+                            height: "36px",
+                            p: 0,
+                            color: "error.main",
+                            border: "none",
+                            outline: "none",
+                            "&:focus": {
+                              outline: "none",
+                              border: "none",
+                            },
+                            "&:hover": {
+                              backgroundColor: (theme) => alpha(theme.palette.error.main, 0.08),
+                              border: "none",
+                              outline: "none",
+                              "& .MuiSvgIcon-root": {
+                                color: "error.dark",
+                              },
+                            },
+                          }}
+                        >
+                          <DeleteOutlineIcon fontSize="small" />
+                        </SecondaryButton>
+                      )}
+                    </Box>
                   </Box>
-                </Box>
-              ))}
-            </Box>
+                ))}
+              </Box>
 
-            <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
-              <SecondaryButton type="button" onClick={handleAddCashflow} className="add-btn">
-                Add Cashflow
-              </SecondaryButton>
+              <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
+                <SecondaryButton 
+                  type="button" 
+                  onClick={handleAddCashflow} 
+                  className="add-btn"
+                  sx={{
+                    backgroundColor: 'rgba(25, 118, 210, 0.04)',
+                    '&:hover': {
+                      backgroundColor: 'rgba(25, 118, 210, 0.08)'
+                    }
+                  }}
+                >
+                  Add Cashflow
+                </SecondaryButton>
 
-              <PrimaryButton type="submit" className="submit-btn">
-                Calculate IRR
-              </PrimaryButton>
-            </Box>
-          </form>
+                <PrimaryButton 
+                  type="submit" 
+                  className="submit-btn"
+                  sx={{
+                    boxShadow: '0 2px 4px rgba(25, 118, 210, 0.2)',
+                    '&:hover': {
+                      boxShadow: '0 4px 8px rgba(25, 118, 210, 0.3)'
+                    }
+                  }}
+                >
+                  Calculate IRR
+                </PrimaryButton>
+              </Box>
+            </form>
+          </Paper>
         </Grid>
 
         {result && (
-          <Grid xs={12} className="results" sx={{ mt: 4 }}>
-            <Typography variant="h5" gutterBottom>Results</Typography>
-            <Typography variant="body1" sx={{ fontSize: "1.25rem", fontWeight: 600, color: "primary.main", mb: 3 }}>
-              Internal Rate of Return (IRR): {result.irr.toFixed(2)}%
-            </Typography>
+          <Grid item xs={12} sx={{ mt: 6, px: 3 }}>
+            <Paper 
+              elevation={3} 
+              sx={{ 
+                width: '100%',
+                p: 3, 
+                mb: 4,
+                borderRadius: 2,
+                background: 'linear-gradient(to right, #f5f7fa, #ffffff)',
+                position: 'relative',
+                overflow: 'hidden',
+                boxSizing: 'border-box'
+              }}
+            >
+              <Box sx={{ position: 'relative', zIndex: 1 }}>
+                <Typography variant="h5" gutterBottom sx={{ color: 'text.primary', fontWeight: 500 }}>
+                  Calculated Results
+                </Typography>
+                <Typography 
+                  variant="h3" 
+                  sx={{ 
+                    color: 'primary.main',
+                    fontWeight: 700,
+                    mb: 2,
+                    display: 'flex',
+                    alignItems: 'baseline',
+                    gap: 1
+                  }}
+                >
+                  {result.irr.toFixed(2)}%
+                  <Typography component="span" variant="h6" sx={{ color: 'text.secondary', fontWeight: 400 }}>
+                    Internal Rate of Return
+                  </Typography>
+                </Typography>
+              </Box>
+            </Paper>
 
-            <Typography variant="h6" gutterBottom>Verification Table</Typography>
-            <Typography variant="body2" sx={{ fontStyle: "italic", color: "text.secondary", mb: 2 }}>
-              This table demonstrates the equivalent scenario of a fixed-term deposit with an annual compounding rate matching the calculated
-              IRR, validating the return calculation over the investment period.
-            </Typography>
+            <Paper elevation={2} sx={{ width: '100%', p: 3, borderRadius: 2, boxSizing: 'border-box' }}>
+              <Typography variant="h6" gutterBottom sx={{ color: 'text.primary', fontWeight: 500 }}>
+                Verification Table
+              </Typography>
+              <Typography variant="body2" sx={{ color: 'text.secondary', mb: 3, maxWidth: '800px' }}>
+                This table demonstrates the equivalent scenario of a fixed-term deposit with an annual compounding rate matching the calculated IRR, validating the return calculation over the investment period.
+              </Typography>
 
-            <TableContainer component={Paper} sx={{ mb: 4, boxShadow: 2, borderRadius: 1, overflow: "hidden" }}>
-              <Table size="small">
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Date</TableCell>
-                    <TableCell>Type</TableCell>
-                    <TableCell align="right">Amount</TableCell>
-                    <TableCell align="right">Growth</TableCell>
-                    <TableCell align="right">Balance</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {result.table.map((row, index) => (
-                    <TableRow key={index}>
-                      <TableCell>{row.date}</TableCell>
-                      <TableCell>{row.type}</TableCell>
-                      <TableCell align="right" sx={{ fontFamily: "monospace" }}>
-                        ${row.amount.toLocaleString("en-US", { minimumFractionDigits: 2 })}
-                      </TableCell>
-                      <TableCell align="right" sx={{ fontFamily: "monospace" }}>
-                        ${row.growthAmount.toLocaleString("en-US", { minimumFractionDigits: 2 })}
-                      </TableCell>
-                      <TableCell align="right" sx={{ fontFamily: "monospace" }}>
-                        ${row.balance.toLocaleString("en-US", { minimumFractionDigits: 2 })}
-                      </TableCell>
+              <TableContainer sx={{ 
+                borderRadius: 1,
+                overflow: 'hidden',
+                '& .MuiTable-root': {
+                  borderCollapse: 'separate',
+                  borderSpacing: '0'
+                }
+              }}>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell sx={{ 
+                        backgroundColor: 'primary.main',
+                        color: 'common.white',
+                        fontWeight: 500,
+                        '&:first-of-type': { borderTopLeftRadius: 8 },
+                        '&:last-of-type': { borderTopRightRadius: 8 }
+                      }}>Date</TableCell>
+                      <TableCell sx={{ backgroundColor: 'primary.main', color: 'common.white', fontWeight: 500 }}>Type</TableCell>
+                      <TableCell align="right" sx={{ backgroundColor: 'primary.main', color: 'common.white', fontWeight: 500 }}>Amount</TableCell>
+                      <TableCell align="right" sx={{ backgroundColor: 'primary.main', color: 'common.white', fontWeight: 500 }}>Growth</TableCell>
+                      <TableCell align="right" sx={{ backgroundColor: 'primary.main', color: 'common.white', fontWeight: 500 }}>Balance</TableCell>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
+                  </TableHead>
+                  <TableBody>
+                    {result.table.map((row, index) => (
+                      <TableRow 
+                        key={index}
+                        sx={{
+                          backgroundColor: row.isEoy ? 'action.hover' : 'inherit',
+                          '&:last-child td': { borderBottom: 0 },
+                          '&:hover': {
+                            backgroundColor: 'action.hover',
+                          }
+                        }}
+                      >
+                        <TableCell sx={{ borderBottom: '1px solid', borderColor: 'divider' }}>
+                          {row.date}
+                        </TableCell>
+                        <TableCell sx={{ 
+                          borderBottom: '1px solid',
+                          borderColor: 'divider',
+                          color: row.type === 'deposit' ? 'error.main' : row.type === 'received' ? 'success.main' : 'text.secondary',
+                          fontWeight: row.type === 'Pre-Final Balance' ? 500 : 400
+                        }}>
+                          {row.type}
+                        </TableCell>
+                        <TableCell align="right" sx={{ 
+                          fontFamily: "monospace",
+                          borderBottom: '1px solid',
+                          borderColor: 'divider',
+                          color: row.amount > 0 ? (row.type === 'deposit' ? 'error.main' : 'success.main') : 'text.secondary'
+                        }}>
+                          {row.amount > 0 ? `$${row.amount.toLocaleString("en-US", { minimumFractionDigits: 2 })}` : '-'}
+                        </TableCell>
+                        <TableCell align="right" sx={{ 
+                          fontFamily: "monospace",
+                          borderBottom: '1px solid',
+                          borderColor: 'divider',
+                          color: row.growthAmount > 0 ? 'success.main' : row.growthAmount < 0 ? 'error.main' : 'text.secondary'
+                        }}>
+                          ${row.growthAmount.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                        </TableCell>
+                        <TableCell align="right" sx={{ 
+                          fontFamily: "monospace",
+                          borderBottom: '1px solid',
+                          borderColor: 'divider',
+                          fontWeight: row.isFinal || row.isPreFinal ? 600 : 400
+                        }}>
+                          ${row.balance.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Paper>
           </Grid>
         )}
       </Grid>

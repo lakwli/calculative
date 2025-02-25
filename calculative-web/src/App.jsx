@@ -33,7 +33,7 @@ function App() {
       path: "/irr",
       element: <IrrCal />,
       icon: <KeyboardControlKeyIcon />,
-      title: "Invest&IRR"
+      title: "Fund&Return"
     }
   ];
 

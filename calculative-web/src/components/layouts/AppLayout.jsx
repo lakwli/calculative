@@ -28,7 +28,7 @@ const AppLayout = ({ children, routes }) => {
             <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
               <img src={logo} alt="Logo" style={{ height: "32px" }} />
               <Typography
-                variant="h5"
+                variant="h4"
                 component="h1"
                 sx={{
                   fontWeight: "bold",
