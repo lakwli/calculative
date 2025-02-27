@@ -15,19 +15,32 @@ for ticker in tickers:
         if data.empty:
             print(f"Failed to get data for {ticker}")
             continue
-        
+
+        # Flatten the multi-index DataFrame by renaming columns
+        data.columns = data.columns.get_level_values(0)
+
         # Log the columns to check what's available
         print(f"Columns in {ticker} data: {data.columns.tolist()}")
 
         # Ensure the necessary columns exist before processing
-        if 'Open' in data.columns and 'Close' in data.columns and 'Dividends' in data.columns:
+        if 'Open' in data.columns and 'Close' in data.columns:
             data['Year'] = data.index.year
-            yearly_data = data.groupby('Year').agg({
-                'Open': 'first',
-                'Close': 'last',
-                'Dividends': 'sum'
-            })
-            yearly_data['Return'] = (yearly_data['Close'] - yearly_data['Open']) / yearly_data['Open'] * 100
+            # Check if 'Dividends' column exists
+            if 'Dividends' in data.columns:
+                yearly_data = data.groupby('Year').agg({
+                    'Open': 'first',
+                    'Close': 'last',
+                    'Dividends': 'sum'
+                })
+                yearly_data['Return'] = (yearly_data['Close'] - yearly_data['Open']) / yearly_data['Open'] * 100
+            else:
+                yearly_data = data.groupby('Year').agg({
+                    'Open': 'first',
+                    'Close': 'last'
+                })
+                yearly_data['Return'] = (yearly_data['Close'] - yearly_data['Open']) / yearly_data['Open'] * 100
+
+            # Save the processed data to a CSV file
             yearly_data.to_csv(f"{ticker}_yearly_data.csv")
         else:
             print(f"Necessary columns are missing for {ticker}")
