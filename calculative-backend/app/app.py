@@ -29,6 +29,9 @@ def get_cal():
         yearly_withdraw = data.get('yearlyWithdraw')
         inflation = data.get('inflation')
         return_type = data.get('returnType') #S (Simple), M (Market index), I (Investment)
+        # Handle missing required fields
+        if data.get('backTestYear') is None:
+            return jsonify({"error": "backTestYear is required"}), 400
         back_test_year = int(data.get('backTestYear'))
         index = data.get('index')  
         portfolio=None
@@ -37,24 +40,32 @@ def get_cal():
             portfolio={index: 1.0}
         elif return_type == "I":
             portfolio = data.get('portfolio')
-        fix_return = data.get('fixReturn')
+        # Set default value for fixReturn if not provided
+        fix_return = data.get('fixReturn', 0)  # Default to 0 if not provided
         div_withhold_tax = data.get('divWithholdTax')
         print(f"Age: {age}, Initial Capital: {initial_capital}, Yearly Withdraw: {yearly_withdraw}, Portfolio: {portfolio}, Inflation: {inflation}, Back Test Year: {back_test_year},return type:{return_type} Index: {index}, fix Return: {fix_return}, Div Tax: {div_withhold_tax}")
         
         stockCal = StockCal()
-        df = stockCal.get_yearly_investment_return(
-            portfolio,  
-            initial_investment=float(initial_capital),
-            initial_withdrawal=float(yearly_withdraw),
-            withdrawal_inflation_rate=float(inflation)/100,
-            dividend_tax_rate=float(div_withhold_tax)/100,
-            start_year=back_test_year,
-            starting_age=int(age),
-            return_type=return_type,
-            expected_return=float(fix_return)/100,
-            initial_dividend_yield=0, 
-            dividend_growth=0
-        )
+        # Check for other required fields
+        if initial_capital is None or yearly_withdraw is None or inflation is None:
+            return jsonify({"error": "initialCapital, yearlyWithdraw, and inflation are required"}), 400
+            
+        try:
+            df = stockCal.get_yearly_investment_return(
+                portfolio,  
+                initial_investment=float(initial_capital),
+                initial_withdrawal=float(yearly_withdraw),
+                withdrawal_inflation_rate=float(inflation)/100,
+                dividend_tax_rate=float(div_withhold_tax or 0)/100,  # Default to 0 if None
+                start_year=back_test_year,
+                starting_age=int(age or 30),  # Default to 30 if None
+                return_type=return_type or 'S',  # Default to 'S' if None
+                expected_return=float(fix_return)/100,
+                initial_dividend_yield=0, 
+                dividend_growth=0
+            )
+        except (TypeError, ValueError) as e:
+            return jsonify({"error": str(e)}), 400
 
         # To JSON:
         #json_data = df.to_dict(orient='records')

@@ -1,4 +1,4 @@
-FROM python:3.9-slim
+FROM python:3.12-slim
 
 WORKDIR /app
 
@@ -7,15 +7,18 @@ RUN apt-get update && apt-get install -y \
     git \
     curl \
     vim \
+    build-essential \
+    gcc \
     && rm -rf /var/lib/apt/lists/*
+
+# Update pip and install packages globally
+RUN python -m pip install --upgrade pip
 
 # Create non-root user for development
 RUN useradd -m -s /bin/bash vscode \
     && chown -R vscode:vscode /app
 
-# Don't install requirements here - let devcontainer.json handle it
-# Don't copy application code - will be mounted by devcontainer.json
+# Prevent Python from generating bytecode files
+ENV PYTHONDONTWRITEBYTECODE=1
 
 USER vscode
-
-# No CMD - devcontainer.json handles this
