@@ -7,6 +7,7 @@ import os
 import json
 
 def get_stock_data(ticker, start_date=None, end_date=None):
+
     """
     Fetch full available historical stock data using period="max".
     """
@@ -53,6 +54,20 @@ def calculate_annual_returns(hist):
         
     return pd.DataFrame(annual_data)
 
+def get_index_data(ticker):
+    indices_dir = "app/data/indices"
+    cleaned_ticker = ticker.replace("^", "").replace("=", "")
+    filepath = os.path.join(indices_dir, f"{cleaned_ticker}.json")
+
+    try:
+        with open(filepath, 'r') as f:
+            index_data = json.load(f)
+            return index_data
+    except FileNotFoundError:
+        print(f"Error: Data for {ticker} not found.")
+        return None
+
+
 def main():
     indices_dir = "app/data/indices"
     os.makedirs(indices_dir, exist_ok=True)
@@ -93,4 +108,5 @@ def main():
             print(f"An error occurred processing {ticker}:", e)
 
 if __name__ == "__main__":
-    main()
+    #main()
+    print(get_index_data("GSPC"))
