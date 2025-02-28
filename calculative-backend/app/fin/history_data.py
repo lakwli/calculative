@@ -2,22 +2,11 @@ import yfinance as yf
 import pandas as pd
 
 
-market_indices = [
-    "^GSPC",  # S&P 500
-    "^DJI",   # Dow Jones Industrial Average
-    "^IXIC",  # NASDAQ Composite
-    "^FTSE",  # FTSE 100
-    "^N225",  # Nikkei 225
-    "^GDAXI", # DAX Performance Index
-    "^FCHI",  # CAC 40
-    "^HSI",   # Hang Seng Index
-    "^BSESN", # BSE Sensex
-    "^STOXX50E"  # EURO STOXX 50
-]
+import json
+import os
+import json
 
-
-
-def get_stock_data(ticker):
+def get_stock_data(ticker, start_date=None, end_date=None):
     """
     Fetch full available historical stock data using period="max".
     """
@@ -65,27 +54,43 @@ def calculate_annual_returns(hist):
     return pd.DataFrame(annual_data)
 
 def main():
-    ticker = input("Enter stock ticker (e.g., SCHD): ").upper().strip()
-    
+    indices_dir = "app/data/indices"
+    os.makedirs(indices_dir, exist_ok=True)
+
     try:
-        hist = get_stock_data(ticker)
-        if hist.empty:
-            print("No data found for the specified stock.")
-            return
+        with open(os.path.join(indices_dir, "market_indices.json"), "r") as f:
+            market_indices = json.load(f)
+    except FileNotFoundError:
+        print("Error: market_indices.json not found.")
+        return  # Exit if the file is not found
 
-        # Determine the full date range available
-        start_date = hist.index.min().strftime("%Y-%m-%d")
-        end_date = hist.index.max().strftime("%Y-%m-%d")
-        print(f"Data available from {start_date} to {end_date}")
+    for ticker, data in market_indices.items():
+        try:
+            hist = get_stock_data(ticker)
+            if hist.empty:
+                print(f"No data found for {ticker}")
+                continue  # Skip to the next ticker if no data
 
-        annual_df = calculate_annual_returns(hist)
-        print("\nAnnual Performance:")
-        print(annual_df.to_string(index=False, formatters={
-            'Return': '{:.2%}'.format,
-            'Dividend Yield (%)': '{:.2f}%'.format
-        }))
-    except Exception as e:
-        print("An error occurred:", e)
+            annual_df = calculate_annual_returns(hist)
+
+            # Create JSON output
+            output_data = {
+                "index": ticker,
+                "name": data["name"],
+                "description": data.get("description", ""), # Include description if available
+                "annual_performance": annual_df.to_dict('records')
+            }
+
+            #Remove special characters from ticker for filename
+            cleaned_ticker = ticker.replace("^", "").replace("=", "")
+
+            output_filename = os.path.join(indices_dir, f"{cleaned_ticker}.json")
+            with open(output_filename, "w") as f:
+                json.dump(output_data, f, indent=4)
+            print(f"JSON data for {ticker} saved to {output_filename}")
+
+        except Exception as e:
+            print(f"An error occurred processing {ticker}:", e)
 
 if __name__ == "__main__":
     main()
