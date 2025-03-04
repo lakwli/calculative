@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from datetime import datetime
-from fin.run_yahoo import StockCal
+from app.fin.stock_cal import StockCal
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
