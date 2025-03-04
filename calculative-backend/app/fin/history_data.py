@@ -2,9 +2,9 @@ import yfinance as yf
 import pandas as pd
 
 
-import json
 import os
 import json
+from app.config.market_indices import MARKET_INDICES
 
 def get_stock_data(ticker, start_date=None, end_date=None):
 
@@ -72,14 +72,7 @@ def main():
     indices_dir = "app/data/indices"
     os.makedirs(indices_dir, exist_ok=True)
 
-    try:
-        with open(os.path.join(indices_dir, "market_indices.json"), "r") as f:
-            market_indices = json.load(f)
-    except FileNotFoundError:
-        print("Error: market_indices.json not found.")
-        return  # Exit if the file is not found
-
-    for ticker, data in market_indices.items():
+    for ticker, data in MARKET_INDICES.items():
         try:
             hist = get_stock_data(ticker)
             if hist.empty:
@@ -108,5 +101,5 @@ def main():
             print(f"An error occurred processing {ticker}:", e)
 
 if __name__ == "__main__":
-    #main()
-    print(get_index_data("GSPC"))
+    main()
+    #print(get_index_data("GSPC"))
