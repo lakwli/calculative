@@ -1,13 +1,10 @@
 import yfinance as yf
 import pandas as pd
-
-
 import os
 import json
 from app.config.market_indices import MARKET_INDICES
 
 def get_stock_data(ticker, start_date=None, end_date=None):
-
     """
     Fetch full available historical stock data using period="max".
     """
@@ -64,42 +61,32 @@ def get_index_data(ticker):
             index_data = json.load(f)
             return index_data
     except FileNotFoundError:
-        print(f"Error: Data for {ticker} not found.")
-        return None
+        print(f"Data for {ticker} not found. Fetching and saving data...")
+        hist = get_stock_data(ticker)
+        if hist.empty:
+            print(f"No data found for {ticker}")
+            return None
 
+        annual_df = calculate_annual_returns(hist)
 
-def main():
-    indices_dir = "app/data/indices"
-    os.makedirs(indices_dir, exist_ok=True)
+        output_data = {
+            "index": ticker,
+            "name": MARKET_INDICES.get(ticker, {}).get("name", ""),
+            "description": MARKET_INDICES.get(ticker, {}).get("description", ""),
+            "annual_performance": annual_df.to_dict('records')
+        }
 
-    for ticker, data in MARKET_INDICES.items():
-        try:
-            hist = get_stock_data(ticker)
-            if hist.empty:
-                print(f"No data found for {ticker}")
-                continue  # Skip to the next ticker if no data
+        os.makedirs(indices_dir, exist_ok=True) # Ensure directory exists
+        with open(filepath, "w") as f:
+            json.dump(output_data, f, indent=4)
+        print(f"JSON data for {ticker} saved to {filepath}")
+        return output_data
 
-            annual_df = calculate_annual_returns(hist)
-
-            # Create JSON output
-            output_data = {
-                "index": ticker,
-                "name": data["name"],
-                "description": data.get("description", ""), # Include description if available
-                "annual_performance": annual_df.to_dict('records')
-            }
-
-            #Remove special characters from ticker for filename
-            cleaned_ticker = ticker.replace("^", "").replace("=", "")
-
-            output_filename = os.path.join(indices_dir, f"{cleaned_ticker}.json")
-            with open(output_filename, "w") as f:
-                json.dump(output_data, f, indent=4)
-            print(f"JSON data for {ticker} saved to {output_filename}")
-
-        except Exception as e:
-            print(f"An error occurred processing {ticker}:", e)
+def process_market_indices():
+    for ticker, _ in MARKET_INDICES.items():
+        get_index_data(ticker)
 
 if __name__ == "__main__":
-    main()
-    #print(get_index_data("GSPC"))
+    process_market_indices()
+    # Example usage (you can uncomment this to test):
+    #print(get_index_data("VIG"))
