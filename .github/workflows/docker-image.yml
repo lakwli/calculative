@@ -22,7 +22,7 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Backend: Build and push Docker image
+    - name: Backend Build and push Docker image
       uses: docker/build-push-action@v5
       with:
         context: ./calculative-backend
