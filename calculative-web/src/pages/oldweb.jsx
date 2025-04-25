@@ -146,7 +146,8 @@ const OldWeb = () => {
     };
 
     try {
-      const response = await fetch('http://localhost:5000/getCal', {
+      //const response = await fetch('http://localhost:5000/getCal', {
+        const response = await fetch('https://saas.findinggoodlife.com/getCal', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
