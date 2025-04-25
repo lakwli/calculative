@@ -5,6 +5,7 @@ import json
 @pytest.fixture
 def client():
     app.config['TESTING'] = True
+    app.config['CORS_ORIGINS'] = ['http://localhost:3000']
     with app.test_client() as client:
         yield client
 
@@ -20,13 +21,59 @@ def test_test1_route(client):
     assert response.status_code == 200
     assert b'test1' in response.data
 
-def test_getCal_options(client):
-    """Test the OPTIONS preflight request for getCal"""
-    response = client.options('/getCal')
+def test_getCal_options_allowed_origin(client):
+    """Test the OPTIONS preflight request for getCal with allowed origin"""
+    headers = {
+        'Origin': 'http://localhost:3000'
+    }
+    response = client.options('/getCal', headers=headers)
     assert response.status_code == 200
-    assert 'Access-Control-Allow-Origin' in response.headers
+    assert response.headers['Access-Control-Allow-Origin'] == 'http://localhost:3000'
     assert 'Access-Control-Allow-Methods' in response.headers
     assert 'Access-Control-Allow-Headers' in response.headers
+
+def test_getCal_options_disallowed_origin(client):
+    """Test the OPTIONS preflight request for getCal with disallowed origin"""
+    headers = {
+        'Origin': 'http://malicious-site.com'
+    }
+    response = client.options('/getCal', headers=headers)
+    assert response.status_code == 200
+    assert 'Access-Control-Allow-Origin' not in response.headers
+    assert 'Access-Control-Allow-Methods' in response.headers
+    assert 'Access-Control-Allow-Headers' in response.headers
+
+def test_getCal_post_cors(client):
+    """Test CORS headers in POST response"""
+    headers = {
+        'Origin': 'http://localhost:3000'
+    }
+    data = {
+        'age': 30,
+        'initialCapital': 100000,
+        'yearlyWithdraw': 5000,
+        'inflation': 2,
+        'returnType': 'S',
+        'backTestYear': 2020,
+        'fixReturn': 5
+    }
+    response = client.post('/getCal', 
+                        headers=headers,
+                        json=data)
+    assert response.status_code == 200
+    assert response.headers['Access-Control-Allow-Origin'] == 'http://localhost:3000'
+
+def test_getCal_error_cors(client):
+    """Test CORS headers in error response"""
+    headers = {
+        'Origin': 'http://localhost:3000'
+    }
+    data = {'age': 30}  # Missing required fields
+    response = client.post('/getCal', 
+                        headers=headers,
+                        json=data)
+    assert response.status_code == 400
+    assert response.headers['Access-Control-Allow-Origin'] == 'http://localhost:3000'
 
 def test_getCal_simple_return(client):
     """Test getCal with simple return type"""

@@ -1,27 +1,41 @@
-from flask import Flask, request, jsonify
-from flask_cors import CORS
+import os
+import json
+from flask import request, jsonify, Response
 from datetime import datetime
-from app.fin.stock_cal import StockCal
+import logging
+from . import create_app
+from .fin.stock_cal import StockCal
 
-app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "*"}})
+# Create and configure the application
+app, limiter = create_app(os.getenv('FLASK_ENV', 'default'))
 
 @app.route('/')
 def home():
+    app.logger.info('Home endpoint accessed')
     return 'Hello, Flask! 123'
 
+@app.route('/health')
+def health_check():
+    """Health check endpoint for monitoring."""
+    return jsonify({
+        "status": "healthy",
+        "timestamp": datetime.utcnow().isoformat()
+    })
+
 @app.route('/test1', methods=['GET'])
+@limiter.limit(app.config['RATE_LIMIT'])
 def test1():
-    print("Received data:test1")
+    app.logger.info("Test1 endpoint accessed")
     return 'test1'
 
 @app.route('/getCal', methods=['POST', 'OPTIONS'])
+@limiter.limit(app.config['RATE_LIMIT'])
 def get_cal():
     if request.method == 'OPTIONS':
         return _build_cors_preflight_response()
     else:
         data = request.json
-        print("Received data:", data)
+        app.logger.info("Received data for calculation: %s", data)
 
         # Extracting JSON data into separate variables
         age = data.get('age')
@@ -31,7 +45,8 @@ def get_cal():
         return_type = data.get('returnType') #S (Simple), M (Market index), I (Investment)
         # Handle missing required fields
         if data.get('backTestYear') is None:
-            return jsonify({"error": "backTestYear is required"}), 400
+            response = jsonify({"error": "backTestYear is required"}), 400
+            return _corsify_actual_response(response[0]), response[1]
         back_test_year = int(data.get('backTestYear'))
         index = data.get('index')  
         portfolio=None
@@ -43,12 +58,16 @@ def get_cal():
         # Set default value for fixReturn if not provided
         fix_return = data.get('fixReturn', 0)  # Default to 0 if not provided
         div_withhold_tax = data.get('divWithholdTax')
-        print(f"Age: {age}, Initial Capital: {initial_capital}, Yearly Withdraw: {yearly_withdraw}, Portfolio: {portfolio}, Inflation: {inflation}, Back Test Year: {back_test_year},return type:{return_type} Index: {index}, fix Return: {fix_return}, Div Tax: {div_withhold_tax}")
+        app.logger.debug(f"Processing calculation with parameters - Age: {age}, Initial Capital: {initial_capital}, " 
+                      f"Yearly Withdraw: {yearly_withdraw}, Portfolio: {portfolio}, Inflation: {inflation}, "
+                      f"Back Test Year: {back_test_year}, Return Type: {return_type}, Index: {index}, "
+                      f"Fix Return: {fix_return}, Div Tax: {div_withhold_tax}")
         
         stockCal = StockCal()
         # Check for other required fields
         if initial_capital is None or yearly_withdraw is None or inflation is None:
-            return jsonify({"error": "initialCapital, yearlyWithdraw, and inflation are required"}), 400
+            response = jsonify({"error": "initialCapital, yearlyWithdraw, and inflation are required"}), 400
+            return _corsify_actual_response(response[0]), response[1]
             
         try:
             df = stockCal.get_yearly_investment_return(
@@ -65,29 +84,52 @@ def get_cal():
                 dividend_growth=0
             )
         except (TypeError, ValueError) as e:
-            return jsonify({"error": str(e)}), 400
+            response = jsonify({"error": str(e)}), 400
+            return _corsify_actual_response(response[0]), response[1]
 
-        # To JSON:
-        #json_data = df.to_dict(orient='records')
-        print(df)
-        
-        #return jsonify(df)
-        print('change.....ccc................')
-        return df
+        # Convert DataFrame to proper JSON
+        json_data = json.loads(df)  # Since df is already a JSON string
+        app.logger.debug("Calculation result: %s", json_data)
+        response = jsonify(json_data)
+        return _corsify_actual_response(response)
 
 def _build_cors_preflight_response():
     response = jsonify(success=True)
-    response.headers.add("Access-Control-Allow-Origin", "*")
+    origin = request.headers.get('Origin')
+    app.logger.debug(f"Received preflight request from origin: {origin}")
+    app.logger.debug(f"Allowed origins: {app.config['CORS_ORIGINS']}")
+    if origin in app.config['CORS_ORIGINS']:
+        app.logger.debug(f"Adding CORS headers for origin: {origin}")
+        response.headers.add("Access-Control-Allow-Origin", origin)
+    else:
+        app.logger.debug(f"Origin not allowed: {origin}")
     response.headers.add("Access-Control-Allow-Headers", "Content-Type, Authorization")
     response.headers.add("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT, DELETE")
     return response
 
 def _corsify_actual_response(response):
-    response.headers.add("Access-Control-Allow-Origin", "*")
+    origin = request.headers.get('Origin')
+    app.logger.debug(f"Received request from origin: {origin}")
+    app.logger.debug(f"Allowed origins: {app.config['CORS_ORIGINS']}")
+    if origin in app.config['CORS_ORIGINS']:
+        app.logger.debug(f"Adding CORS headers for origin: {origin}")
+        response.headers.add("Access-Control-Allow-Origin", origin)
+    else:
+        app.logger.debug(f"Origin not allowed: {origin}")
     return response
 
+# Global error handler
+@app.errorhandler(Exception)
+def handle_exception(e):
+    app.logger.error(f"Unhandled exception: {str(e)}")
+    response = jsonify({"error": "Internal server error"}), 500
+    return _corsify_actual_response(response[0]), response[1]
+
 if __name__ == '__main__':
-    #app.run(debug=True)
-    #app.run(port=5000) //doesn't work in codespace with docker
-    app.run(debug=True, host='0.0.0.0',port=5000) 
-    #app.run()
+    # Add the current directory to Python path
+    import sys
+    sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+    
+    # In production, debug should be False
+    debug = os.getenv('FLASK_ENV') != 'production'
+    app.run(debug=debug, host='0.0.0.0', port=5000)
