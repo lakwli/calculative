@@ -26,23 +26,24 @@ function App() {
   };
 
   const routes = [
-    {
-      path: "/retirement",
-      element: <RetirementSimulation />,
-      icon: <BatteryCharging80Icon />,
-      title: "Save&Spend"
-    },
+    
     {
       path: "/irr",
       element: <IrrCal />,
       icon: <KeyboardControlKeyIcon />,
-      title: "Fund&Return"
+      title: "Saving Fund"
     },
     {
       path: "/oldweb",
       element: <OldWeb />,
       icon: <HistoryIcon />,
       title: "Retirement (Simple)"
+    },
+    {
+      path: "/retirement",
+      element: <RetirementSimulation />,
+      icon: <BatteryCharging80Icon />,
+      title: "Cash Flow"
     }
   ];
 

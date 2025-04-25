@@ -443,6 +443,22 @@ const IrrCal = () => {
       <Grid container spacing={0} sx={{ mt: 1 }}>
         <Grid item xs={12} sx={{ px: 3 }}>
           <Paper elevation={2} sx={{ width: '100%', p: 3, borderRadius: 2, mb: 3, background: 'linear-gradient(to right, #ffffff, #f8f9fa)', boxSizing: 'border-box' }}>
+            <Typography variant="body1" sx={{ mb: 2, color: 'text.secondary', lineHeight: 1.6 }}>
+              A person told you that there is a good return saving fund that could help you build your wealth over time.
+            </Typography>
+
+            <Typography variant="body1" sx={{ mb: 2, color: 'text.secondary', lineHeight: 1.6 }}>
+              The investment structure is interesting - you contribute some money initially and continue with regular contributions each year for a specified period.
+            </Typography>
+
+            <Typography variant="body1" sx={{ mb: 2, color: 'text.secondary', lineHeight: 1.6 }}>
+              What makes this fund unique is its tiered return structure: you'll receive a certain percentage return for the first few years, followed by higher returns in subsequent years, and even higher returns in the later years. As a bonus, at the end of a 20-year term, you'll receive an additional amount, bringing your total returns to an enticing sum.
+            </Typography>
+
+            <Typography variant="body1" sx={{ mb: 4, color: 'text.secondary', lineHeight: 1.6 }}>
+              Is this sound good to you? Let's use this calculator to find out if the returns match your expectations!
+            </Typography>
+
             <Typography variant="h5" gutterBottom sx={{ color: 'text.primary', fontWeight: 500, mb: 3 }}>
               Fund Return Calculator
             </Typography>
