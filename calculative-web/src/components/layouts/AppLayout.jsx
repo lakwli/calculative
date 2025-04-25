@@ -34,7 +34,7 @@ const AppLayout = ({ children, routes }) => {
                   fontWeight: "bold",
                 }}
               >
-                Calculative
+                Calculative (Experimental)
               </Typography>
             </Box>
             <Stack direction="row" spacing={2}>
