@@ -7,35 +7,37 @@ import { useIsSmOrSmaller } from '../utils/DeviceUtils'; // Import the utility f
 
 export const CustomTextField = styled(({ clearable, showlabelifonlysm = "false", ...other }) => {
   const isSmOrSmaller = useIsSmOrSmaller();
-
-  // Filter out showLabelIfOnlySM prop
   const { label, ...rest } = other;
 
   return (
     <MuiTextField
       {...rest}
       label={showlabelifonlysm === "true"? (isSmOrSmaller ? label : '') : label}
-     
     />
   );
 })(({ theme }) => ({
-  //'& .MuiInputBase-root': {
-   // color: theme.palette.text.primary,
-  //},
-  //'& .MuiInputLabel-root': {
-  //  color: theme.palette.text.secondary,
- // },
- // '& .MuiOutlinedInput-root': {
- //   '& fieldset': {
-//      borderColor: theme.palette.primary.main,
- //   },
-  //  '&:hover fieldset': {
- //     borderColor: theme.palette.primary.dark,
- //   },
- //   '&.Mui-focused fieldset': {
-//      borderColor: theme.palette.primary.dark,
- //   },
-  //},
+  '& .MuiInputBase-root': {
+    height: '40px',
+  },
+  
+  // Add specific styling for the calendar icon in dark mode
+  '& input[type="date"]::-webkit-calendar-picker-indicator': {
+    filter: theme.palette.mode === 'dark' ? 'invert(1)' : 'none'
+  },
+  
+  '& .MuiSvgIcon-root': {
+    color: theme.palette.text.primary
+  },
+  
+  '& .MuiInputAdornment-root': {
+    color: theme.palette.text.primary
+  },
+  
+  '& .MuiIconButton-root': {
+    color: theme.palette.text.primary
+  },
+
+  ...theme.components?.CustomTextField?.styleOverrides
 }));
 
 export default CustomTextField;

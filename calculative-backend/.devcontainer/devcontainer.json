@@ -23,7 +23,8 @@
                 "ms-python.python",
                 "ms-python.vscode-pylance",
                 "ms-python.black-formatter",
-                "ms-python.debugpy"
+                "ms-python.debugpy",
+                "ms-vscode.clangd"
             ]
         }
     },
@@ -32,7 +33,9 @@
         "FLASK_APP": "app/app.py",
         "FLASK_ENV": "development",
         "FLASK_DEBUG": "1",
-        "PYTHONUNBUFFERED": "1"
+        "PYTHONUNBUFFERED": "1",
+        "PATH": "${containerEnv:PATH}:/home/vscode/.local/bin",
+        "PYTHONPATH": "/app"
     },
 
     // This only works if the application is actually running

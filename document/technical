@@ -59,3 +59,68 @@ docker builder prune -f
 
 # Rebuild from scratch
 docker-compose up --build
+
+
+docker stop $(docker ps -aq)
+docker rm $(docker ps -aq)
+docker rmi -f $(docker images -aq)
+docker volume rm $(docker volume ls -q)
+docker network rm $(docker network ls -q)
+
+
+todo: https://github.com/dcoapp/app?form=MG0AV3, https://github.com/apps/dco
+#!/bin/bash
+
+# Ensure you have a clean working directory before running this script
+# This script will rebase and amend commits in the range specified
+
+# Configure your name and email for the sign-off
+NAME="Your Name"
+EMAIL="your.email@example.com"
+
+# Specify the number of commits to amend
+NUM_COMMITS=<number-of-commits>
+
+# Start the interactive rebase
+git rebase -i HEAD~$NUM_COMMITS
+
+# Edit each commit to include the sign-off
+git filter-branch --msg-filter '
+  cat &&
+  echo "" &&
+  echo "Signed-off-by: $NAME <$EMAIL>"
+' HEAD~$NUM_COMMITS..HEAD
+
+# Force push the changes
+git push --force
+
+
+===========================
+chmod +x add-signoff.sh
+
+============================
+./add-signoff.sh
+
+
+
+From VS code:
+
+Create Commit Template: Create a file named .gitmessage with the following
+Signed-off-by: Your Name <your.email@example.com>
+
+Configure Git to Use the Template: Run the following command to configure Git to use the commit template:
+git config --global commit.template ~/.gitmessage
+
+
+todo: vault
+
+todo: GitHub Action (who can commit, check quality before allow for commit). Gerrit, https://gerrithub.io/q/status:open+-is:wip
+
+============
+#docker container prune
+#docker image prune
+#docker system prune --all
+#docker system prune -a --volumes
+
+#docker volume prune
+#docker builder prune
