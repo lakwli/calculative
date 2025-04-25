@@ -5,6 +5,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { lightTheme, darkTheme } from './theme/theme';
 import RetirementSimulation from './pages/RetirementSimulation';
 import IrrCal from './pages/IrrCal';
+import OldWeb from './pages/oldweb';
 import WbSunnyIcon from '@mui/icons-material/WbSunny';
 import Brightness2Icon from '@mui/icons-material/Brightness2';
 import './styles/App.css';
@@ -15,6 +16,7 @@ import SavingsOutlinedIcon from '@mui/icons-material/SavingsOutlined';
 import CalculateOutlinedIcon from '@mui/icons-material/CalculateOutlined';
 import BatteryCharging80Icon from '@mui/icons-material/BatteryCharging80';
 import KeyboardControlKeyIcon from '@mui/icons-material/KeyboardControlKey';
+import HistoryIcon from '@mui/icons-material/History';
 
 function App() {
   const [darkMode, setDarkMode] = useState(false);
@@ -35,6 +37,12 @@ function App() {
       element: <IrrCal />,
       icon: <KeyboardControlKeyIcon />,
       title: "Fund&Return"
+    },
+    {
+      path: "/oldweb",
+      element: <OldWeb />,
+      icon: <HistoryIcon />,
+      title: "Retirement (Simple)"
     }
   ];
 
