@@ -10,7 +10,7 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 
 # Import configurations
-from app.config.config import config
+from app.config.config import config, Config
 
 # Custom JSON Formatter
 class JsonFormatter(logging.Formatter):
@@ -131,10 +131,13 @@ def create_app(config_name='default'):
     # Setup Logging (call this only once)
     setup_logging(app)
 
-    # Initialize CORS early - using '*' for now to debug, refine later
-    # Ensure supports_credentials=True if you need cookies/auth headers
-    CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
-    app.logger.info(f"CORS initialized with origins: *") # Log CORS setup
+    # Initialize CORS with origin validation
+    origins = app.config['CORS_ORIGINS']
+    CORS(app, 
+         resources={r"/*": {"origins": origins}}, 
+         supports_credentials=True,
+         origins_callback=Config.is_valid_origin)
+    app.logger.info(f"CORS initialized with allowed origins patterns: {origins}")
 
     # Initialize Limiter with the app instance
     limiter.init_app(app)

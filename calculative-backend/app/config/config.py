@@ -9,8 +9,33 @@ class Config:
     """Base configuration."""
     TESTING = False
     SECRET_KEY = environ.get('SECRET_KEY')
-    CORS_ORIGINS = environ.get('CORS_ORIGINS').split(',') if environ.get('CORS_ORIGINS') else None
+    _cors_origins_raw = environ.get('CORS_ORIGINS', '').split(',') if environ.get('CORS_ORIGINS') else []
+    CORS_ORIGINS = [origin.strip() for origin in _cors_origins_raw if origin.strip()]
     RATE_LIMIT = environ.get('RATE_LIMIT', '100 per minute')
+
+    @staticmethod
+    def is_valid_origin(origin):
+        """Validate if an origin matches the allowed patterns, including wildcards."""
+        if not origin:
+            return False
+        
+        allowed_origins = Config.CORS_ORIGINS
+        if not allowed_origins:
+            return False
+
+        try:
+            for pattern in allowed_origins:
+                # Handle wildcard subdomains
+                if pattern.startswith('https://*.'):
+                    domain = pattern.replace('https://*.', '')
+                    if origin.endswith(domain) and origin.startswith('https://'):
+                        return True
+                # Handle exact matches
+                elif pattern == origin:
+                    return True
+            return False
+        except Exception:
+            return False
 
 class ProductionConfig(Config):
     """Production configuration."""
