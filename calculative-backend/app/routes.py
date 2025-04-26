@@ -174,6 +174,7 @@ def get_cal():
     try:
         json_data = json.loads(df_json_string)
         response = jsonify(json_data)
+        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
         logger.debug("Response preparation complete")
         return response
     except json.JSONDecodeError:
