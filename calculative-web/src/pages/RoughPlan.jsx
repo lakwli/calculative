@@ -146,8 +146,8 @@ const RoughPlan = () => {
     };
 
     try {
-        const response = await fetch('http://localhost:5002/getCal', {
-        //const response = await fetch('https://api.numberwalk.com/getCal', {
+        //const response = await fetch('http://localhost:5002/getCal', {
+        const response = await fetch('https://api.numberwalk.com/getCal', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -185,7 +185,7 @@ const RoughPlan = () => {
   return (
     <Container>
       <Typography variant="h4" align="center" gutterBottom>
-        Retirement Simulation (Simple2)
+        Retirement Rough Plan
       </Typography>
 
       <Box component="form" noValidate sx={{ mt: 3 }}>
