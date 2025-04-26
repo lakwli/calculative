@@ -1039,7 +1039,7 @@ const IrrCal = () => {
               <Typography variant="h6" gutterBottom sx={{ color: 'text.primary', fontWeight: 500 }}>
                 Verification Table
               </Typography>
-              <Typography variant="body2" sx={{ color: 'text.secondary', mb: 3, maxWidth: '800px' }}>
+              <Typography variant="body2" sx={{ color: 'text.secondary', mb: 3, width: '100%' }}>
                 This table shows how your investment would grow at a {result.irr.toFixed(2)}% annual rate, matching exactly 
                 the contributions and withdrawals of the proposed investment plan.
               </Typography>
