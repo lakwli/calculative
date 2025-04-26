@@ -223,7 +223,6 @@ const IrrCal = () => {
   ]);
   const [result, setResult] = useState(null);
   const [draggedId, setDraggedId] = useState(null);
-  const [showScenario, setShowScenario] = useState(false);
   const formRef = useRef(null);
 
   const handleDragStart = (e, id) => {
@@ -413,7 +412,6 @@ const IrrCal = () => {
     ];
     
     setCashflows(newCashflows);
-    setShowScenario(false);
   };
 
   const handleSubmit = (e) => {
@@ -577,195 +575,25 @@ const IrrCal = () => {
                 </Box>
               </Box>
               
-              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                Let's use the calculator below to determine what Internal Rate of Return (IRR) this investment really provides. A higher IRR means a better investment opportunity.
-              </Typography>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 3 }}>
+                <Typography variant="body2" sx={{ color: 'text.secondary', flex: 1 }}>
+                  Let's use the calculator below to determine what Internal Rate of Return (IRR) this investment really provides. A higher IRR means a better investment opportunity.
+                </Typography>
+                <PrimaryButton 
+                  onClick={applyScenarioExample}
+                  startIcon={<AccountBalanceIcon />}
+                  sx={{
+                    boxShadow: '0 2px 4px rgba(25, 118, 210, 0.2)',
+                    ml: 2,
+                    '&:hover': {
+                      boxShadow: '0 4px 8px rgba(25, 118, 210, 0.3)'
+                    }
+                  }}
+                >
+                  Apply This Example
+                </PrimaryButton>
+              </Box>
             </Box>
-
-            <Box 
-              sx={{ 
-                mb: 4, 
-                display: 'flex', 
-                justifyContent: 'space-between', 
-                alignItems: 'center',
-                cursor: 'pointer',
-                backgroundColor: 'action.hover',
-                p: 2,
-                borderRadius: '8px',
-                transition: 'all 0.2s',
-                '&:hover': {
-                  backgroundColor: 'action.selected',
-                },
-              }}
-              onClick={() => setShowScenario(!showScenario)}
-            >
-              <Typography variant="body1" sx={{ color: 'text.primary', lineHeight: 1.6, fontWeight: showScenario ? 600 : 500 }}>
-                {showScenario ? "Hide detailed explanation" : "View detailed breakdown and explanation"}
-              </Typography>
-              <IconButton size="small">
-                {showScenario ? <ExpandLessIcon color="primary" /> : <ExpandMoreIcon />}
-              </IconButton>
-            </Box>
-            
-            <Collapse in={showScenario}>
-              <div className="scenario-container">
-                <div className="scenario-header">
-                  <h3>Example Scenario: 20-Year Investment Fund</h3>
-                  <ArticleIcon />
-                </div>
-                <div className="scenario-body">
-                  <div className="scenario-section">
-                    <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 500 }}>
-                      How This Investment Works:
-                    </Typography>
-                    <div className="timeline-container">
-                      <div className="timeline-item">
-                        <div className="timeline-marker deposit"></div>
-                        <div className="timeline-phase">Phase 1: Initial Investment Period (Years 1-6)</div>
-                        <div className="timeline-details">
-                          <div className="timeline-detail">
-                            <span className="timeline-label">Annual Contribution</span>
-                            <span className="timeline-value highlight">$10,000</span>
-                          </div>
-                          <div className="timeline-detail">
-                            <span className="timeline-label">Duration</span>
-                            <span className="timeline-value">6 years</span>
-                          </div>
-                          <div className="timeline-detail">
-                            <span className="timeline-label">Total Contributed</span>
-                            <span className="timeline-value">$60,000</span>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className="timeline-item">
-                        <div className="timeline-marker return"></div>
-                        <div className="timeline-phase">Phase 2: Early Return Period (Years 7-12)</div>
-                        <div className="timeline-details">
-                          <div className="timeline-detail">
-                            <span className="timeline-label">Annual Return</span>
-                            <span className="timeline-value highlight">$800</span>
-                          </div>
-                          <div className="timeline-detail">
-                            <span className="timeline-label">Duration</span>
-                            <span className="timeline-value">6 years</span>
-                          </div>
-                          <div className="timeline-detail">
-                            <span className="timeline-label">Return Rate</span>
-                            <span className="timeline-value">8% of original annual deposit</span>
-                          </div>
-                        </div>
-                        <div className="return-calculation">
-                          $800 annually = 8% return on your $10,000 annual investment
-                        </div>
-                      </div>
-                      
-                      <div className="timeline-item">
-                        <div className="timeline-marker return"></div>
-                        <div className="timeline-phase">Phase 3: Mid Return Period (Years 13-23)</div>
-                        <div className="timeline-details">
-                          <div className="timeline-detail">
-                            <span className="timeline-label">Annual Return</span>
-                            <span className="timeline-value highlight">$1,600</span>
-                          </div>
-                          <div className="timeline-detail">
-                            <span className="timeline-label">Duration</span>
-                            <span className="timeline-value">11 years</span>
-                          </div>
-                          <div className="timeline-detail">
-                            <span className="timeline-label">Return Rate</span>
-                            <span className="timeline-value">16% of original annual deposit</span>
-                          </div>
-                        </div>
-                        <div className="return-calculation">
-                          $1,600 annually = 16% return on your $10,000 annual investment
-                        </div>
-                      </div>
-                      
-                      <div className="timeline-item">
-                        <div className="timeline-marker return"></div>
-                        <div className="timeline-phase">Phase 4: Late Return Period (Years 24-26)</div>
-                        <div className="timeline-details">
-                          <div className="timeline-detail">
-                            <span className="timeline-label">Annual Return</span>
-                            <span className="timeline-value highlight">$2,000</span>
-                          </div>
-                          <div className="timeline-detail">
-                            <span className="timeline-label">Duration</span>
-                            <span className="timeline-value">3 years</span>
-                          </div>
-                          <div className="timeline-detail">
-                            <span className="timeline-label">Return Rate</span>
-                            <span className="timeline-value">20% of original annual deposit</span>
-                          </div>
-                        </div>
-                        <div className="return-calculation">
-                          $2,000 annually = 20% return on your $10,000 annual investment
-                        </div>
-                      </div>
-                      
-                      <div className="timeline-item">
-                        <div className="timeline-marker final"></div>
-                        <div className="timeline-phase">Phase 5: Final Maturity (Year 27)</div>
-                        <div className="timeline-details">
-                          <div className="timeline-detail">
-                            <span className="timeline-label">Final Payment</span>
-                            <span className="timeline-value highlight">$96,000</span>
-                          </div>
-                          <div className="timeline-detail">
-                            <span className="timeline-label">Includes</span>
-                            <span className="timeline-value">$60,000 principal + $36,000 bonus</span>
-                          </div>
-                        </div>
-                        <div className="return-calculation">
-                          $96,000 = Return of your $60,000 total contributions plus a $36,000 bonus!
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="scenario-summary">
-                    <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 500 }}>
-                      Total Return Summary:
-                    </Typography>
-                    <Typography variant="body2" sx={{ mb: 2 }}>
-                      • Total Contributed: <strong>$60,000</strong> ($10,000 × 6 years)<br />
-                      • Total Returns: <strong>$127,600</strong> ($4,800 + $17,600 + $6,000 + $96,000 + $3,200)<br />
-                      • Net Profit: <strong>$67,600</strong> ($127,600 - $60,000)<br />
-                    </Typography>
-                    <Typography variant="body2">
-                      Let's calculate the Internal Rate of Return (IRR) to see if this investment is as good as it sounds!
-                    </Typography>
-                  </div>
-                  
-                  <div className="scenario-buttons">
-                    <PrimaryButton 
-                      onClick={applyScenarioExample}
-                      startIcon={<AccountBalanceIcon />}
-                      sx={{
-                        boxShadow: '0 2px 4px rgba(25, 118, 210, 0.2)',
-                        '&:hover': {
-                          boxShadow: '0 4px 8px rgba(25, 118, 210, 0.3)'
-                        }
-                      }}
-                    >
-                      Apply This Example
-                    </PrimaryButton>
-                    <SecondaryButton 
-                      onClick={() => setShowScenario(false)}
-                      sx={{
-                        backgroundColor: 'rgba(25, 118, 210, 0.04)',
-                        '&:hover': {
-                          backgroundColor: 'rgba(25, 118, 210, 0.08)'
-                        }
-                      }}
-                    >
-                      Close Example
-                    </SecondaryButton>
-                  </div>
-                </div>
-              </div>
-            </Collapse>
 
             <Typography variant="h5" gutterBottom sx={{ color: 'text.primary', fontWeight: 500, mb: 3 }}>
               Fund Return Calculator
