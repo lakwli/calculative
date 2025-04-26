@@ -1,11 +1,15 @@
 """Configuration settings for different environments."""
 from os import environ
+from dotenv import load_dotenv
+
+# Load .env file if it exists (development)
+load_dotenv()
 
 class Config:
     """Base configuration."""
     TESTING = False
-    SECRET_KEY = environ.get('SECRET_KEY', 'dev-key-change-in-production')
-    CORS_ORIGINS = environ.get('CORS_ORIGINS', 'http://localhost:3000').split(',')
+    SECRET_KEY = environ.get('SECRET_KEY')
+    CORS_ORIGINS = environ.get('CORS_ORIGINS').split(',') if environ.get('CORS_ORIGINS') else None
     RATE_LIMIT = environ.get('RATE_LIMIT', '100 per minute')
 
 class ProductionConfig(Config):
@@ -14,10 +18,10 @@ class ProductionConfig(Config):
     LOG_LEVEL = 'INFO'
     # Ensure these are set in production environment
     def __init__(self):
-        if not environ.get('SECRET_KEY'):
-            raise ValueError("SECRET_KEY must be set in production")
-        if environ.get('CORS_ORIGINS') == 'http://localhost:3000':
-            raise ValueError("CORS_ORIGINS must be set in production")
+        if not self.SECRET_KEY:
+            raise ValueError("SECRET_KEY must be set in environment")
+        if not self.CORS_ORIGINS:
+            raise ValueError("CORS_ORIGINS must be set in environment")
 
 class DevelopmentConfig(Config):
     """Development configuration."""

@@ -21,8 +21,7 @@ COPY . .
 # Set permissions
 RUN chown -R appuser:appuser /app
 
-# Production settings
-ENV FLASK_ENV=production
+# Runtime settings
 ENV PYTHONUNBUFFERED=1
 ENV PORT=5000
 
