@@ -22,7 +22,7 @@ import {
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import RemoveCircleIcon from '@mui/icons-material/RemoveCircle';
 
-const OldWeb = () => {
+const RoughPlan = () => {
   // Form state
   const [formData, setFormData] = useState({
     age: '56',
@@ -413,4 +413,4 @@ const OldWeb = () => {
   );
 };
 
-export default OldWeb;
+export default RoughPlan;

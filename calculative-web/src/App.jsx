@@ -5,7 +5,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { lightTheme, darkTheme } from './theme/theme';
 import RetirementSimulation from './pages/RetirementSimulation';
 import IrrCal from './pages/IrrCal';
-import OldWeb from './pages/oldweb';
+import RoughPlan from './pages/RoughPlan';
 import WbSunnyIcon from '@mui/icons-material/WbSunny';
 import Brightness2Icon from '@mui/icons-material/Brightness2';
 import './styles/App.css';
@@ -34,8 +34,8 @@ function App() {
       title: "Saving Fund"
     },
     {
-      path: "/oldweb",
-      element: <OldWeb />,
+      path: "/roughplan",
+      element: <RoughPlan />,
       icon: <HistoryIcon />,
       title: "Retirement (Simple)"
     },
