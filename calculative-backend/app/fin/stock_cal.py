@@ -188,7 +188,6 @@ class StockCal:
                     break
 
         json_output = json.dumps(json_data, indent=4)
-        print(json_output)
         return json_output
 
 # Example usage

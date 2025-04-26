@@ -9,6 +9,10 @@ from .fin.stock_cal import StockCal
 # Create and configure the application
 app, limiter = create_app(os.getenv('FLASK_ENV', 'default'))
 
+# Set logging level based on environment
+if os.getenv('FLASK_ENV') == 'production':
+    app.logger.setLevel(logging.INFO)
+
 @app.route('/')
 def home():
     app.logger.info('Home endpoint accessed')
@@ -35,7 +39,7 @@ def get_cal():
         return _build_cors_preflight_response()
     else:
         data = request.json
-        app.logger.info("Received data for calculation: %s", data)
+        app.logger.info("Calculation request received")
 
         # Extracting JSON data into separate variables
         age = data.get('age')
@@ -58,10 +62,6 @@ def get_cal():
         # Set default value for fixReturn if not provided
         fix_return = data.get('fixReturn', 0)  # Default to 0 if not provided
         div_withhold_tax = data.get('divWithholdTax')
-        app.logger.debug(f"Processing calculation with parameters - Age: {age}, Initial Capital: {initial_capital}, " 
-                      f"Yearly Withdraw: {yearly_withdraw}, Portfolio: {portfolio}, Inflation: {inflation}, "
-                      f"Back Test Year: {back_test_year}, Return Type: {return_type}, Index: {index}, "
-                      f"Fix Return: {fix_return}, Div Tax: {div_withhold_tax}")
         
         stockCal = StockCal()
         # Check for other required fields
@@ -89,7 +89,6 @@ def get_cal():
 
         # Convert DataFrame to proper JSON
         json_data = json.loads(df)  # Since df is already a JSON string
-        app.logger.debug("Calculation result: %s", json_data)
         response = jsonify(json_data)
         return _corsify_actual_response(response)
 
