@@ -13,8 +13,11 @@ import {
   Typography,
   IconButton,
   Collapse,
+  Alert,
+  AlertTitle,
+  Grid,
 } from "@mui/material";
-import Grid from "@mui/material/Grid2";
+import Grid2 from "@mui/material/Grid2";
 import { NumericFormat } from "react-number-format";
 import {
   Table,
@@ -32,6 +35,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
 import ArticleIcon from '@mui/icons-material/Article';
+import ReportProblemOutlinedIcon from '@mui/icons-material/ReportProblemOutlined';
 
 const calculateIRR = (cashflows) => {
   let guess = 0.1;
@@ -297,7 +301,7 @@ const IrrCal = () => {
       newDate.setFullYear(prevDate.getFullYear() + yearsToAdd);
       newDate.setMonth(prevDate.getMonth() + remainingMonths);
     }
-    
+        
     handleCashflowChange(currentId, "date", newDate.toISOString().split('T')[0]);
   };
 
@@ -383,34 +387,34 @@ const IrrCal = () => {
       },
       {
         id: Date.now() + 1,
-        date: getFormattedDate(firstYear + 7),
+        date: getFormattedDate(firstYear + 1), // Start from year 2
         amount: "800",
         type: "received",
         occurrence: { frequency: "year", count: 6 }
       },
       {
         id: Date.now() + 2,
-        date: getFormattedDate(firstYear + 13),
+        date: getFormattedDate(firstYear + 7), // Start from year 8
         amount: "1600",
         type: "received",
-        occurrence: { frequency: "year", count: 11 }
+        occurrence: { frequency: "year", count: 10 }
       },
       {
         id: Date.now() + 3,
-        date: getFormattedDate(firstYear + 24),
+        date: getFormattedDate(firstYear + 17), // Start from year 18
         amount: "2000",
         type: "received",
         occurrence: { frequency: "year", count: 3 }
       },
       {
         id: Date.now() + 4,
-        date: getFormattedDate(firstYear + 27),
+        date: getFormattedDate(firstYear + 20), // Year 21
         amount: "96000",
         type: "received",
         occurrence: { frequency: "none", count: 1 }
       }
     ];
-    
+        
     setCashflows(newCashflows);
   };
 
@@ -552,9 +556,9 @@ const IrrCal = () => {
                     RETURN PHASES
                   </Typography>
                   <Typography variant="body2" sx={{ fontWeight: 400, color: 'text.secondary' }}>
-                    • Years 7-12: <strong>8% return</strong> ($800 annually)<br />
-                    • Years 13-23: <strong>16% return</strong> ($1,600 annually)<br />
-                    • Years 24-26: <strong>20% return</strong> ($2,000 annually)
+                    • Years 2-7: <strong>8% return</strong> ($800 annually)<br />
+                    • Years 8-17: <strong>16% return</strong> ($1,600 annually)<br />
+                    • Years 18-20: <strong>20% return</strong> ($2,000 annually)
                   </Typography>
                 </Box>
                 
@@ -569,7 +573,7 @@ const IrrCal = () => {
                     FINAL MATURITY
                   </Typography>
                   <Typography variant="body2" sx={{ fontWeight: 400, color: 'text.secondary' }}>
-                    Year 27: <strong>$96,000</strong> final payment<br />
+                    Year 21: <strong>$96,000</strong> final payment<br />
                     Includes your principal plus <strong>$36,000</strong> bonus
                   </Typography>
                 </Box>
@@ -858,15 +862,184 @@ const IrrCal = () => {
                     Internal Rate of Return
                   </Typography>
                 </Typography>
+                
+                <Alert 
+                  severity="info"
+                  sx={{ 
+                    mb: 2, 
+                    mt: 2,
+                    '& .MuiAlert-icon': { alignSelf: 'flex-start', mt: 1 } 
+                  }}
+                >
+                  <AlertTitle sx={{ fontWeight: 600 }}>Why is this number much lower than advertised?</AlertTitle>
+                  <Box sx={{ mt: 1 }}>
+                    <Typography variant="body2" paragraph sx={{ mb: 1 }}>
+                      The advertised rates (8%, 16%, 20%) are <strong>not</strong> the actual investment returns. 
+                      They represent the percentage return on your <strong>annual contribution</strong>, not your total investment.
+                    </Typography>
+
+                    <Typography variant="body2" paragraph sx={{ mb: 1 }}>
+                      Here's why this is misleading:
+                    </Typography>
+
+                    <Box sx={{ pl: 2, mb: 2 }}>
+                      <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                        <Box 
+                          component="span" 
+                          sx={{ 
+                            minWidth: '20px', 
+                            height: '20px', 
+                            borderRadius: '50%', 
+                            bgcolor: 'primary.main', 
+                            color: 'white', 
+                            fontSize: '0.75rem',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            mr: 1 
+                          }}
+                        >
+                          1
+                        </Box>
+                        After 6 years, you've contributed $60,000 but receive only $800 per year.
+                      </Typography>
+                      <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                        <Box 
+                          component="span" 
+                          sx={{ 
+                            minWidth: '20px', 
+                            height: '20px', 
+                            borderRadius: '50%', 
+                            bgcolor: 'primary.main', 
+                            color: 'white', 
+                            fontSize: '0.75rem',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            mr: 1 
+                          }}
+                        >
+                          2
+                        </Box>
+                        $800 is 8% of your $10,000 annual contribution, but only 1.33% of your total $60,000 investment.
+                      </Typography>
+                      <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center' }}>
+                        <Box 
+                          component="span" 
+                          sx={{ 
+                            minWidth: '20px', 
+                            height: '20px', 
+                            borderRadius: '50%', 
+                            bgcolor: 'primary.main', 
+                            color: 'white', 
+                            fontSize: '0.75rem',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            mr: 1 
+                          }}
+                        >
+                          3
+                        </Box>
+                        Even in later years with "16%" and "20%" returns, you're still receiving a much lower actual return on your total investment.
+                      </Typography>
+                    </Box>
+
+                    <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                      The IRR calculation above shows the <u>true annualized return</u> of this investment over its entire lifetime.
+                    </Typography>
+                  </Box>
+                </Alert>
+                
+                <Box 
+                  sx={{ 
+                    mt: 3, 
+                    p: 2, 
+                    borderRadius: 1, 
+                    border: '1px dashed',
+                    borderColor: 'warning.main',
+                    bgcolor: 'warning.light',
+                    color: 'warning.dark',
+                    display: 'flex',
+                    alignItems: 'center',
+                  }}
+                >
+                  <ReportProblemOutlinedIcon sx={{ fontSize: '2rem', mr: 2 }} />
+                  <Typography variant="body2">
+                    Traditional investments like index funds historically return 7-10% annually over the long term. 
+                    A {result.irr.toFixed(2)}% return may be significantly lower than what you could earn elsewhere with less complexity.
+                  </Typography>
+                </Box>
               </Box>
             </Paper>
 
             <Paper elevation={2} sx={{ width: '100%', p: 3, borderRadius: 2, boxSizing: 'border-box' }}>
               <Typography variant="h6" gutterBottom sx={{ color: 'text.primary', fontWeight: 500 }}>
+                Understanding the True Returns
+              </Typography>
+
+              <Box sx={{ mb: 3 }}>
+                <Typography variant="body2" paragraph>
+                  The verification table below proves that a fixed deposit with a {result.irr.toFixed(2)}% annual rate would produce 
+                  exactly the same results as this investment plan when making identical contributions and withdrawals.
+                </Typography>
+
+                <Grid container spacing={2} sx={{ mb: 2 }}>
+                  <Grid item xs={12} md={6}>
+                    <Paper 
+                      elevation={0} 
+                      sx={{ 
+                        p: 2, 
+                        bgcolor: 'background.default',
+                        border: '1px solid',
+                        borderColor: 'divider',
+                        borderRadius: 2
+                      }}
+                    >
+                      <Typography variant="subtitle2" sx={{ mb: 1, color: 'error.main' }}>
+                        HOW THE MARKETING IS MISLEADING
+                      </Typography>
+                      <Typography variant="body2" paragraph>
+                        When they say "8% return," they're calculating: 
+                        <Box sx={{ fontWeight: 500, my: 1, textAlign: 'center' }}>
+                          $800 annual payment ÷ $10,000 annual contribution = 8%
+                        </Box>
+                        But this ignores your total invested amount ($60,000).
+                      </Typography>
+                    </Paper>
+                  </Grid>
+                  <Grid item xs={12} md={6}>
+                    <Paper 
+                      elevation={0} 
+                      sx={{ 
+                        p: 2, 
+                        bgcolor: 'background.default',
+                        border: '1px solid',
+                        borderColor: 'divider',
+                        borderRadius: 2
+                      }}
+                    >
+                      <Typography variant="subtitle2" sx={{ mb: 1, color: 'success.main' }}>
+                        WHAT MATTERS: TRUE RETURN ON TOTAL INVESTMENT
+                      </Typography>
+                      <Typography variant="body2" paragraph>
+                        Your actual annual return in year 7:
+                        <Box sx={{ fontWeight: 500, my: 1, textAlign: 'center' }}>
+                          $800 annual payment ÷ $60,000 total investment = 1.33%
+                        </Box>
+                        The IRR calculation considers all cashflows over time.
+                      </Typography>
+                    </Paper>
+                  </Grid>
+                </Grid>
+              </Box>
+
+              <Typography variant="h6" gutterBottom sx={{ color: 'text.primary', fontWeight: 500 }}>
                 Verification Table
               </Typography>
               <Typography variant="body2" sx={{ color: 'text.secondary', mb: 3, maxWidth: '800px' }}>
-                This table demonstrates the equivalent scenario of a fixed-term deposit with an annual compounding rate matching the calculated IRR, validating the return calculation over the investment period.
+                This table shows how your investment would grow at a {result.irr.toFixed(2)}% annual rate, matching exactly 
+                the contributions and withdrawals of the proposed investment plan.
               </Typography>
 
               <TableContainer sx={{ 
