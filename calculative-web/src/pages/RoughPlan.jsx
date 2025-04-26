@@ -22,7 +22,7 @@ import {
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import RemoveCircleIcon from '@mui/icons-material/RemoveCircle';
 
-const OldWeb = () => {
+const RoughPlan = () => {
   // Form state
   const [formData, setFormData] = useState({
     age: '56',
@@ -146,8 +146,8 @@ const OldWeb = () => {
     };
 
     try {
-      //const response = await fetch('http://localhost:5000/getCal', {
-        const response = await fetch('https://saas.findinggoodlife.com/getCal', {
+        //const response = await fetch('http://localhost:5002/getCal', {
+        const response = await fetch('https://api.numberwalk.com/getCal', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -185,7 +185,7 @@ const OldWeb = () => {
   return (
     <Container>
       <Typography variant="h4" align="center" gutterBottom>
-        Retirement Simulation (Simple2)
+        Retirement Rough Plan
       </Typography>
 
       <Box component="form" noValidate sx={{ mt: 3 }}>
@@ -413,4 +413,4 @@ const OldWeb = () => {
   );
 };
 
-export default OldWeb;
+export default RoughPlan;

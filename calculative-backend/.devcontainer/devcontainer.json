@@ -15,7 +15,7 @@
     "postCreateCommand": "pip install -r requirements.txt",
 
     // Equivalent to ENTRYPOINT ["python"] CMD ["app/app.py"]
-    "postStartCommand": "python app/app.py",
+    "postStartCommand": "python run.py",
 
     "customizations": {
         "vscode": {
@@ -30,7 +30,7 @@
     },
 
     "remoteEnv": {
-        "FLASK_APP": "app/app.py",
+        "FLASK_APP": "app/run.py",
         "FLASK_ENV": "development",
         "FLASK_DEBUG": "1",
         "PYTHONUNBUFFERED": "1",

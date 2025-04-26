@@ -18,11 +18,13 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application
 COPY . .
 
-# Set permissions
+# Create log directory if it doesn't exist and ensure correct ownership
+RUN mkdir -p /app/logs && chown appuser:appuser /app/logs
+
+# Set permissions for the rest of the app directory
 RUN chown -R appuser:appuser /app
 
-# Production settings
-ENV FLASK_ENV=production
+# Runtime settings
 ENV PYTHONUNBUFFERED=1
 ENV PORT=5000
 
