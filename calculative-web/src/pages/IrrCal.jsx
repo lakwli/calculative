@@ -957,17 +957,19 @@ const IrrCal = () => {
                     p: 2, 
                     borderRadius: 1, 
                     border: '1px dashed',
-                    borderColor: 'warning.main',
-                    bgcolor: 'warning.light',
-                    color: 'warning.dark',
+                    borderColor: 'info.main',
+                    bgcolor: 'info.light',
+                    color: 'info.dark',
                     display: 'flex',
                     alignItems: 'center',
                   }}
                 >
                   <ReportProblemOutlinedIcon sx={{ fontSize: '2rem', mr: 2 }} />
                   <Typography variant="body2">
-                    Traditional investments like index funds historically return 7-10% annually over the long term. 
-                    A {result.irr.toFixed(2)}% return may be significantly lower than what you could earn elsewhere with less complexity.
+                    Consider whether a {result.irr.toFixed(2)}% guaranteed return aligns with your financial goals. 
+                    While this investment offers certainty that market investments don't, 
+                    the long-term commitment and lower return rate should be weighed against 
+                    your other investment options and liquidity needs.
                   </Typography>
                 </Box>
               </Box>
