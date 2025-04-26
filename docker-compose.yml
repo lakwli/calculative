@@ -6,9 +6,15 @@ services:
     ports:
       - "5000:5000"
     volumes:
+      # Mount application code
       - ./calculative-backend/app:/app/app
+      # Mount log directory: host_path:container_path
+      # Ensure /var/log/calculative-backend exists on the host or Docker will create it as root
+      - /var/log/calculative-backend:/app/logs 
     environment:
       - FLASK_ENV=development
+      # Optional: Set log level via environment variable
+      # - LOG_LEVEL=DEBUG # Or INFO, WARNING, ERROR
 
   oldweb:
     build: ./calculative-oldweb

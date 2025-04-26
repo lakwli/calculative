@@ -1,17 +1,63 @@
 import os
 import json
-from flask import request, jsonify, Response
+import time
+from flask import request, jsonify, Response, g
 from datetime import datetime
 import logging
 from . import create_app
 from .fin.stock_cal import StockCal
 
 # Create and configure the application
+# Logging is now configured within create_app
 app, limiter = create_app(os.getenv('FLASK_ENV', 'default'))
 
-# Set logging level based on environment
-if os.getenv('FLASK_ENV') == 'production':
-    app.logger.setLevel(logging.INFO)
+# Get the access logger instance configured in __init__.py
+access_logger = logging.getLogger('access')
+
+@app.before_request
+def log_request_info():
+    """Log incoming request details before processing."""
+    g.start_time = time.time() # Store start time in Flask's 'g' object
+    request_info = {
+        "event": "request_started",
+        "method": request.method,
+        "path": request.path,
+        "remote_addr": request.remote_addr,
+        "headers": dict(request.headers),
+        "query_params": request.args.to_dict(),
+    }
+    # Log request body carefully for sensitive data - maybe only log keys or size
+    if request.is_json and request.content_length < 1024 * 10: # Limit body size logging
+         try:
+             request_info["json_body"] = request.get_json()
+         except Exception:
+             request_info["json_body"] = "Error parsing JSON body" # Handle potential errors
+    elif request.form:
+         request_info["form_data"] = request.form.to_dict() # Be cautious with sensitive form data
+
+    access_logger.info("Incoming request", extra={'request_info': request_info})
+
+
+@app.after_request
+def log_response_info(response):
+    """Log outgoing response details after processing."""
+    duration_ms = (time.time() - g.start_time) * 1000 if hasattr(g, 'start_time') else -1
+
+    response_info = {
+        "event": "request_finished",
+        "method": request.method,
+        "path": request.path,
+        "status_code": response.status_code,
+        "duration_ms": round(duration_ms, 2),
+        "remote_addr": request.remote_addr,
+        "response_headers": dict(response.headers),
+    }
+    # Optionally log response body size or snippet (carefully)
+    # response_info["response_size"] = response.content_length
+
+    access_logger.info("Request finished", extra={'request_info': response_info})
+    return response
+
 
 @app.route('/')
 def home():
@@ -118,10 +164,13 @@ def _corsify_actual_response(response):
     return response
 
 # Global error handler
+# Global error handler
 @app.errorhandler(Exception)
 def handle_exception(e):
-    app.logger.error(f"Unhandled exception: {str(e)}")
+    # Use logger.exception to include stack trace automatically
+    app.logger.exception(f"Unhandled exception caught: {str(e)}")
     response = jsonify({"error": "Internal server error"}), 500
+    # Ensure CORS headers are added even for error responses
     return _corsify_actual_response(response[0]), response[1]
 
 if __name__ == '__main__':
