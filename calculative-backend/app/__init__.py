@@ -4,7 +4,7 @@ import logging
 from logging.handlers import RotatingFileHandler
 import json
 from datetime import datetime
-from flask import Flask
+from flask import Flask, Blueprint
 from flask_cors import CORS
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
@@ -115,6 +115,11 @@ def setup_logging(app):
 
     app.logger.info(f"Logging configured. Level: {log_level_str}. Log directory: {log_dir}")
 
+# Initialize Limiter globally so it can be imported by blueprints
+limiter = Limiter(
+    key_func=get_remote_address,
+    # We will initialize it with the app later
+)
 
 def create_app(config_name='default'):
     """Create and configure the Flask application."""
@@ -123,15 +128,28 @@ def create_app(config_name='default'):
     # Load config before setting up logging, as config might influence logging
     app.config.from_object(config[config_name]())
 
-    # Setup Logging
+    # Setup Logging (call this only once)
     setup_logging(app)
 
-    # Initialize other extensions AFTER logging is set up
-    CORS(app, resources={r"/*": {"origins": app.config['CORS_ORIGINS']}})
-    limiter = Limiter(
-        app=app,
-        key_func=get_remote_address,
-        default_limits=[app.config['RATE_LIMIT']]
-    )
-    
-    return app, limiter
+    # Initialize CORS early - using '*' for now to debug, refine later
+    # Ensure supports_credentials=True if you need cookies/auth headers
+    CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
+    app.logger.info(f"CORS initialized with origins: *") # Log CORS setup
+
+    # Initialize Limiter with the app instance
+    limiter.init_app(app)
+    app.logger.info(f"Limiter initialized with default limits: {app.config.get('RATE_LIMIT', '100 per minute')}")
+
+    # Import and register Blueprints
+    # We will create this file in the next step
+    try:
+        from .routes import main_routes
+        app.register_blueprint(main_routes)
+        app.logger.info("Registered main_routes Blueprint.")
+    except ImportError as e:
+        app.logger.error(f"Failed to import or register Blueprint: {e}")
+        # Decide how to handle this - maybe raise the error or log and continue
+        raise e # Re-raise to make the startup failure clear
+
+    # Return only the app instance
+    return app
