@@ -22,23 +22,12 @@ main_routes = Blueprint('main', __name__)
 def log_request_info():
     """Log incoming request details before processing."""
     g.start_time = time.time() # Store start time in Flask's 'g' object
+    # Log only technical information
     request_info = {
         "event": "request_started",
         "method": request.method,
-        "path": request.path,
-        "remote_addr": request.remote_addr,
-        "headers": dict(request.headers),
-        "query_params": request.args.to_dict(),
+        "path": request.path
     }
-    # Log request body carefully for sensitive data - maybe only log keys or size
-    if request.is_json and request.content_length < 1024 * 10: # Limit body size logging
-         try:
-             request_info["json_body"] = request.get_json()
-         except Exception:
-             request_info["json_body"] = "Error parsing JSON body" # Handle potential errors
-    elif request.form:
-         request_info["form_data"] = request.form.to_dict() # Be cautious with sensitive form data
-
     access_logger.info("Incoming request", extra={'request_info': request_info})
 
 
@@ -47,18 +36,14 @@ def log_response_info(response):
     """Log outgoing response details after processing."""
     duration_ms = (time.time() - g.start_time) * 1000 if hasattr(g, 'start_time') else -1
 
+    # Log only technical information
     response_info = {
         "event": "request_finished",
         "method": request.method,
         "path": request.path,
         "status_code": response.status_code,
-        "duration_ms": round(duration_ms, 2),
-        "remote_addr": request.remote_addr,
-        "response_headers": dict(response.headers),
+        "duration_ms": round(duration_ms, 2)
     }
-    # Optionally log response body size or snippet (carefully)
-    # response_info["response_size"] = response.content_length
-
     access_logger.info("Request finished", extra={'request_info': response_info})
     # Apply CORS headers using the helper function if needed (though global CORS might handle it)
     # return _corsify_actual_response(response) # Re-evaluate if this is needed
@@ -99,14 +84,14 @@ def get_cal():
         # Return an empty response, headers are added by Flask-CORS
         return '', 204
 
-    # Handle POST request
-    logger.debug(f"Handling POST request for /getCal")
+    # Handle POST request - technical logging only
+    logger.debug("Processing /getCal POST request")
     data = request.json
     if not data:
-        logger.warning("Received empty JSON data for /getCal")
+        logger.debug("Request validation failed: empty JSON")
         return jsonify({"error": "Request must be JSON"}), 400
 
-    logger.info(f"Calculation request received: {data}") # Log received data
+    logger.info("Starting calculation processing")
 
     # Extracting JSON data into separate variables
     age = data.get('age')
@@ -124,9 +109,8 @@ def get_cal():
     required_fields = ['initialCapital', 'yearlyWithdraw', 'inflation', 'backTestYear', 'returnType']
     missing_fields = [field for field in required_fields if data.get(field) is None]
     if missing_fields:
-        error_msg = f"Missing required fields: {', '.join(missing_fields)}"
-        logger.error(error_msg)
-        return jsonify({"error": error_msg}), 400
+        logger.debug("Request validation failed: missing required fields")
+        return jsonify({"error": "Missing required fields"}), 400
 
     try:
         back_test_year = int(back_test_year_str)
@@ -137,40 +121,37 @@ def get_cal():
         div_withhold_tax_float = float(div_withhold_tax_str or 0) / 100 # Default to 0 if None or empty
         starting_age_int = int(age or 30) # Default age
     except (ValueError, TypeError) as e:
-        error_msg = f"Invalid input type for numerical fields: {e}"
-        logger.error(error_msg)
-        return jsonify({"error": error_msg}), 400
+        logger.debug("Request validation failed: numeric conversion error")
+        return jsonify({"error": "Invalid input type for numerical fields"}), 400
 
     # --- Portfolio Logic ---
     if return_type == "M":
         if not index:
-            logger.error("Index is required when returnType is 'M'")
+            logger.debug("Request validation failed: missing index for market type")
             return jsonify({"error": "Index is required for Market Index return type"}), 400
         return_type = "I" # Treat Market Index as Investment type with single index portfolio
         portfolio = {index: 1.0}
-        logger.debug(f"Market Index type selected. Portfolio set to: {portfolio}")
+        logger.debug("Processing market index calculation")
     elif return_type == "I":
         portfolio = data.get('portfolio')
         if not portfolio or not isinstance(portfolio, dict):
-            logger.error("Portfolio dictionary is required when returnType is 'I'")
+            logger.debug("Request validation failed: invalid portfolio format")
             return jsonify({"error": "Portfolio dictionary is required for Investment return type"}), 400
         # Optional: Validate portfolio weights sum to 1.0
         if not abs(sum(portfolio.values()) - 1.0) < 1e-6:
-             logger.warning(f"Portfolio weights do not sum to 1.0: {portfolio}")
-             # Decide if this is an error or just a warning
-             # return jsonify({"error": "Portfolio weights must sum to 1.0"}), 400
-        logger.debug(f"Investment type selected. Portfolio: {portfolio}")
+             logger.debug("Portfolio weights validation warning")
+        logger.debug("Processing investment calculation")
     elif return_type == "S":
-        logger.debug("Simple return type selected.")
+        logger.debug("Processing simple calculation")
         portfolio = None # Ensure portfolio is None for Simple type
     else:
-        logger.error(f"Invalid returnType: {return_type}")
-        return jsonify({"error": f"Invalid returnType: {return_type}. Must be S, M, or I."}), 400
+        logger.debug("Request validation failed: invalid return type")
+        return jsonify({"error": "Invalid return type. Must be S, M, or I."}), 400
 
     # --- Calculation ---
     stockCal = StockCal()
     try:
-        logger.debug(f"Calling get_yearly_investment_return with params: portfolio={portfolio}, initial_investment={initial_capital_float}, initial_withdrawal={yearly_withdraw_float}, withdrawal_inflation_rate={inflation_float}, dividend_tax_rate={div_withhold_tax_float}, start_year={back_test_year}, starting_age={starting_age_int}, return_type={return_type}, expected_return={fix_return_float}")
+        logger.debug("Starting calculation execution")
         df_json_string = stockCal.get_yearly_investment_return(
             portfolio=portfolio,
             initial_investment=initial_capital_float,
@@ -181,25 +162,22 @@ def get_cal():
             starting_age=starting_age_int,
             return_type=return_type,
             expected_return=fix_return_float,
-            initial_dividend_yield=0, # Assuming defaults if not provided
+            initial_dividend_yield=0,
             dividend_growth=0
         )
-        logger.info("Calculation successful.")
-    except Exception as e: # Catch broader exceptions from StockCal
-        error_msg = f"Error during calculation: {str(e)}"
-        logger.exception(error_msg) # Log exception with traceback
-        return jsonify({"error": "Calculation failed", "details": error_msg}), 500
+        logger.info("Calculation completed successfully")
+    except Exception as e:
+        logger.debug("Calculation execution failed")
+        return jsonify({"error": "Calculation failed"}), 500
 
     # Convert DataFrame JSON string to Python object and then jsonify
     try:
         json_data = json.loads(df_json_string)
         response = jsonify(json_data)
-        logger.debug("Successfully converted calculation result to JSON response.")
-        # CORS headers should be added by the global Flask-CORS extension
+        logger.debug("Response preparation complete")
         return response
-    except json.JSONDecodeError as e:
-        error_msg = f"Failed to decode calculation result JSON: {e}"
-        logger.error(error_msg)
+    except json.JSONDecodeError:
+        logger.debug("JSON processing failed")
         return jsonify({"error": "Failed to process calculation result"}), 500
 
 
@@ -224,19 +202,24 @@ def _corsify_actual_response(response):
 @main_routes.app_errorhandler(Exception)
 def handle_exception(e):
     """Handle unexpected errors."""
-    # Log the exception with traceback
-    current_app.logger.exception(f"Unhandled exception caught: {str(e)}")
-
-    # Return a generic error response
-    response_data = {"error": "Internal server error"}
-    status_code = 500
-
-    # Check if it's an HTTPException (like NotFound, BadRequest) and use its code/description
+    # Log only technical information about the error
+    current_app.logger.debug("Handling unexpected error")
+    
+    # Check if it's a known HTTP exception
     from werkzeug.exceptions import HTTPException
     if isinstance(e, HTTPException):
-        response_data["error"] = e.description
         status_code = e.code
+        if status_code == 404:
+            error_msg = "Endpoint not found"
+        elif status_code == 405:
+            error_msg = "Method not allowed"
+        else:
+            error_msg = "Request error"
+    else:
+        # For unknown errors, log minimal information and return generic message
+        current_app.logger.error(f"Error type: {e.__class__.__name__}")
+        status_code = 500
+        error_msg = "Internal server error"
 
-    response = jsonify(response_data)
-    # CORS headers should be added automatically by Flask-CORS even for errors
+    response = jsonify({"error": error_msg})
     return response, status_code
